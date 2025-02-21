@@ -1,9 +1,9 @@
 package com.swd392.preOrderBlindBox.entity;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import lombok.*;
 
-import java.io.Serializable;
 @Entity
 @Table(name = "campaign_tiers")
 @Getter
@@ -13,21 +13,21 @@ import java.io.Serializable;
 @Builder
 public class CampaignTier extends BaseEntity implements Serializable {
 
-    @Column(name = "tier_name", nullable = false, length = 50)
-    private String tierName;
+  @Column(name = "tier_name", nullable = false, length = 50)
+  private String tierName;
 
-    @Column(name = "min_quantity", nullable = false)
-    private int minQuantity;
+  @Column(name = "min_quantity", nullable = false)
+  private int minQuantity;
 
-    @Column(name = "max_quantity", nullable = false)
-    private int maxQuantity;
+  @Column(name = "max_quantity", nullable = false)
+  private int maxQuantity;
 
-    @Column(name = "discount_percent", nullable = false)
-    private int discountPercent;
+  @Column(name = "discount_percent", nullable = false)
+  private int discountPercent;
 
-    @ManyToOne(
-            cascade = {CascadeType.ALL},
-            fetch = FetchType.LAZY)
-    @JoinColumn(name = "campaign_id", nullable = false)
-    private Campaign campaign;
+  @ManyToOne(
+      cascade = {CascadeType.ALL},
+      fetch = FetchType.LAZY)
+  @JoinColumn(name = "campaign_id", nullable = false)
+  private Campaign campaign;
 }
