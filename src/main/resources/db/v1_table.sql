@@ -2,7 +2,7 @@ CREATE TABLE "users"
 (
     "id"            BIGSERIAL PRIMARY KEY NOT NULL,
     "email"         varchar(50) UNIQUE    NOT NULL,
-    "password"      varchar(50)           NOT NULL,
+    "password"      varchar(200)           NOT NULL,
     "name"          varchar(30)           NOT NULL,
     "gender"        varchar               NOT NULL,
     "avatar"        varchar(255),
