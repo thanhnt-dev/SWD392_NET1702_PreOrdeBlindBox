@@ -5,7 +5,7 @@ server:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/blindbox
+    url: jdbc:postgresql://localhost:5555/blindbox
     username: exe101
     password: 12345
   jpa:
@@ -13,3 +13,6 @@ spring:
       ddl-auto: none
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  jwt:
+    secretKey: 85br1PWiVMiDqYllgMB7XZBdVb90sBy7DjsLFl08wsbC12yTF2W0KMX/pHIPU+T28uXuNw/fGu5P/nxncsaNEA==
+    accessTokenExpirationTime: 172800000 # 2 days
