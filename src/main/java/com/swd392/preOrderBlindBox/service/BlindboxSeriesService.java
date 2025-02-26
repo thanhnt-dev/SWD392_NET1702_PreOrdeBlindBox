@@ -1,6 +1,9 @@
 package com.swd392.preOrderBlindBox.service;
 
 import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -14,4 +17,7 @@ public interface BlindboxSeriesService {
     BlindboxSeries updateBlindboxSeries(Long id, BlindboxSeries blindboxSeries);
 
     void deleteBlindboxSeries(Long id);
+
+    Page<BlindboxSeries> getBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable);
+
 }

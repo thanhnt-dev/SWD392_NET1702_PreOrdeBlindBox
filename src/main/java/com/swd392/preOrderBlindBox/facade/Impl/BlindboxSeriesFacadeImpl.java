@@ -5,6 +5,9 @@ import com.swd392.preOrderBlindBox.facade.BlindboxSeriesFacade;
 import com.swd392.preOrderBlindBox.response.*;
 import com.swd392.preOrderBlindBox.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,7 +19,6 @@ public class BlindboxSeriesFacadeImpl implements BlindboxSeriesFacade {
     private final BlindboxSeriesItemService blindboxSeriesItemService;
     private final BlindboxAssetService blindboxAssetService;
     private final BlindboxUnitService blindboxUnitService;
-    private final CategoryService categoryService;
 
     @Override
     public BaseResponse<List<BlindboxSeriesResponse>> getAllBlindboxSeries() {
@@ -30,6 +32,12 @@ public class BlindboxSeriesFacadeImpl implements BlindboxSeriesFacade {
         BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
         BlindboxSeriesDetailsResponse response = toBlindboxSeriesDetailsResponse(blindboxSeries);
         return BaseResponse.build(response, true);
+    }
+
+    @Override
+    public Page<BlindboxSeriesResponse> searchBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable) {
+        Page<BlindboxSeries> blindboxSeriesPage = blindboxSeriesService.getBlindboxSeries(spec, pageable);
+        return blindboxSeriesPage.map(this::toBlindboxSeriesResponse);
     }
 
 

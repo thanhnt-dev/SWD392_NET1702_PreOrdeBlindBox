@@ -6,6 +6,9 @@ import com.swd392.preOrderBlindBox.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.repository.BlindboxSeriesRepository;
 import com.swd392.preOrderBlindBox.service.BlindboxSeriesService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,5 +51,10 @@ public class BlindboxSeriesServiceImpl implements BlindboxSeriesService {
     @Override
     public void deleteBlindboxSeries(Long id) {
         blindboxSeriesRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<BlindboxSeries> getBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable) {
+        return blindboxSeriesRepository.findAll(spec, pageable);
     }
 }
