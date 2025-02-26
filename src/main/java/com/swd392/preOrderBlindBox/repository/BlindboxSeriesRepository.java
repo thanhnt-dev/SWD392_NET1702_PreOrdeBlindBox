@@ -10,9 +10,4 @@ import java.util.List;
 
 @Repository
 public interface BlindboxSeriesRepository extends JpaRepository<BlindboxSeries, Long> {
-    @Query("SELECT DISTINCT bs FROM BlindboxSeries bs " +
-            "LEFT JOIN FETCH bs.blindboxUnits " +
-            "LEFT JOIN FETCH bs.blindboxAssets " +
-            "LEFT JOIN FETCH bs.blindboxSeriesItems")
-    List<BlindboxSeries> findAll();
 }

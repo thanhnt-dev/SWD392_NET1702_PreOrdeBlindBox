@@ -17,7 +17,7 @@ public class BlindboxSeriesItemServiceImpl implements BlindboxSeriesItemService 
     private final BlindboxSeriesItemRepository blindboxSeriesItemRepository;
 
     @Override
-    public List<BlindboxSeriesItem> getAllBlindboxSeriesItemsByBlindboxSeriesId(Long blindboxSeriesId) {
+    public List<BlindboxSeriesItem> getBlindboxSeriesItemsByBlindboxSeriesId(Long blindboxSeriesId) {
         return blindboxSeriesItemRepository.findByBlindboxSeriesId(blindboxSeriesId);
     }
 

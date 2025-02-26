@@ -10,6 +10,4 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByParentCategoryId(Long parentId);
-
-    Optional<Category> findByBlindboxSeriesId(Long blindboxSeriesId);
 }

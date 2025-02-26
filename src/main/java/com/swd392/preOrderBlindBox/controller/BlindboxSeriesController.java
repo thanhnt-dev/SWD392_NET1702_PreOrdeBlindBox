@@ -4,6 +4,7 @@ package com.swd392.preOrderBlindBox.controller;
 import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
 import com.swd392.preOrderBlindBox.facade.BlindboxSeriesFacade;
 import com.swd392.preOrderBlindBox.response.BaseResponse;
+import com.swd392.preOrderBlindBox.response.BlindboxSeriesDetailsResponse;
 import com.swd392.preOrderBlindBox.response.BlindboxSeriesResponse;
 import com.swd392.preOrderBlindBox.service.BlindboxSeriesService;
 import com.swd392.preOrderBlindBox.service.impl.BlindboxSeriesServiceImpl;
@@ -23,9 +24,18 @@ public class BlindboxSeriesController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @Operation(
-            summary = "Get all blindbox series and their items",
+            summary = "Get all blindbox series",
             tags = {"Blindbox Series APIs"})
     public BaseResponse<List<BlindboxSeriesResponse>> getAllBlindboxSeries() {
         return this.blindboxSeriesFacade.getAllBlindboxSeries();
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Get blindbox series details by id",
+            tags = {"Blindbox Series APIs"})
+    public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesById(@PathVariable Long id) {
+        return this.blindboxSeriesFacade.getBlindboxSeriesWithDetailsById(id);
     }
 }

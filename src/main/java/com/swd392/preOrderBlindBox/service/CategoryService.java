@@ -9,8 +9,6 @@ public interface CategoryService {
 
     List<Category> getCategoriesByParentId(Long parentId);
 
-    Category getCategoryOfBlindboxSeries(Long blindboxSeriesId);
-
     Category getCategoryById(Long id);
 
     Category createCategory(Category category);

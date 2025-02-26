@@ -41,14 +41,6 @@ public class BlindboxSeriesServiceImpl implements BlindboxSeriesService {
        existingBlindboxSeries.setDescription(blindboxSeries.getDescription());
        existingBlindboxSeries.setOpenedAt(blindboxSeries.getOpenedAt());
        existingBlindboxSeries.setCategory(blindboxSeries.getCategory());
-       existingBlindboxSeries.setCampaigns(blindboxSeries.getCampaigns());
-
-       // Clear and update collections
-       existingBlindboxSeries.getBlindboxUnits().clear();
-       existingBlindboxSeries.getBlindboxUnits().addAll(blindboxSeries.getBlindboxUnits());
-
-       existingBlindboxSeries.getBlindboxAssets().clear();
-       existingBlindboxSeries.getBlindboxAssets().addAll(blindboxSeries.getBlindboxAssets());
 
        return blindboxSeriesRepository.save(existingBlindboxSeries);
    }

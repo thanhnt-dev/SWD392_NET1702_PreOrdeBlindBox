@@ -27,12 +27,6 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Category getCategoryOfBlindboxSeries(Long blindboxSeriesId) {
-        return categoryRepository.findByBlindboxSeriesId(blindboxSeriesId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
-    }
-
-    @Override
     public Category getCategoryById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
@@ -53,7 +47,6 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
         existingCategory.setCategoryName(category.getCategoryName());
         existingCategory.setParentCategory(category.getParentCategory());
-        existingCategory.setBlindboxSeries(category.getBlindboxSeries());
         return categoryRepository.save(existingCategory);
     }
 

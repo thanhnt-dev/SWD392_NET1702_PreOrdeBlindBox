@@ -5,7 +5,7 @@ import com.swd392.preOrderBlindBox.entity.BlindboxSeriesItem;
 import java.util.List;
 
 public interface BlindboxSeriesItemService {
-    List<BlindboxSeriesItem> getAllBlindboxSeriesItemsByBlindboxSeriesId(Long blindboxSeriesId);
+    List<BlindboxSeriesItem> getBlindboxSeriesItemsByBlindboxSeriesId(Long blindboxSeriesId);
 
     BlindboxSeriesItem getBlindboxSeriesItemById(Long id);
 
