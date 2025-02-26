@@ -39,9 +39,6 @@ public class Campaign extends BaseEntity implements Serializable {
   @Column(name = "base_price", nullable = false)
   private BigDecimal basePrice;
 
-  @Column(name = "locked_price", nullable = true)
-  private BigDecimal lockedPrice;
-
   @ManyToOne(
       cascade = {CascadeType.ALL},
       fetch = FetchType.LAZY)

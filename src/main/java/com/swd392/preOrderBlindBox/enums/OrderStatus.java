@@ -1,7 +1,6 @@
 package com.swd392.preOrderBlindBox.enums;
 
 public enum OrderStatus {
-  IN_CART,
   PAYMENT_PENDING,
   PAYMENT_FAILED,
   PAYMENT_SUCCESSFUL,

@@ -18,10 +18,10 @@ public class OrderItems extends BaseEntity implements Serializable {
   private Orders order;
 
   @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @JoinColumn(name = "blindbox_unit_id", nullable = false)
-  private BlindboxUnit blindboxUnit;
+  @JoinColumn(name = "cart_item_id", nullable = false)
+  private CartItem cartItem;
 
-  @Column(name = "price", nullable = false)
+  @Column(name = "price", nullable = false, updatable = false) //since price of order_item should be locked and unchangeable
   private BigDecimal price;
 
   @Column(name = "quantity", nullable = false)

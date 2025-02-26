@@ -3,8 +3,12 @@ package com.swd392.preOrderBlindBox.entity;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import lombok.*;
 
 @Entity
@@ -23,7 +27,7 @@ public class BlindboxSeries extends BaseEntity implements Serializable {
   private String description;
 
   @Column(name = "opened_at", nullable = false)
-  private LocalDate openedAt;
+  private LocalDateTime openedAt;
 
   @ManyToOne
   @JoinColumn(name = "category_id", nullable = false)
@@ -31,13 +35,17 @@ public class BlindboxSeries extends BaseEntity implements Serializable {
 
   @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @Builder.Default
-  private List<BlindboxAsset> blindboxAssets = new ArrayList<>();
+  private Set<BlindboxAsset> blindboxAssets = new HashSet<>();
 
   @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @Builder.Default
-  private List<BlindboxUnit> blindboxUnits = new ArrayList<>();
+  private Set<BlindboxUnit> blindboxUnits = new HashSet<>();
 
   @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @Builder.Default
   private List<Campaign> campaigns = new ArrayList<>();
+
+  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @Builder.Default
+    private Set<BlindboxSeriesItem> blindboxSeriesItems = new HashSet<>();
 }

@@ -52,4 +52,8 @@ public class User extends BaseEntity implements Serializable {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @Builder.Default
   private List<Transaction> transactions = new ArrayList<>();
+
+  @OneToOne
+  @JoinColumn(name = "cart_id")
+  private Cart cart;
 }
