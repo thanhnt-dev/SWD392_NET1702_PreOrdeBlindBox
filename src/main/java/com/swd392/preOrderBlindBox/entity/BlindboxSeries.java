@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table(name = "blindbox_series")
@@ -32,20 +34,4 @@ public class BlindboxSeries extends BaseEntity implements Serializable {
   @ManyToOne
   @JoinColumn(name = "category_id", nullable = false)
   private Category category;
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private Set<BlindboxAsset> blindboxAssets = new HashSet<>();
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private Set<BlindboxUnit> blindboxUnits = new HashSet<>();
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<Campaign> campaigns = new ArrayList<>();
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-    private Set<BlindboxSeriesItem> blindboxSeriesItems = new HashSet<>();
 }

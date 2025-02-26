@@ -44,12 +44,4 @@ public class Campaign extends BaseEntity implements Serializable {
       fetch = FetchType.LAZY)
   @JoinColumn(name = "blindbox_series_id", nullable = false)
   private BlindboxSeries blindboxSeries;
-
-  @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  List<CampaignTier> campaignTiers = new ArrayList<>();
-
-  @OneToMany(mappedBy = "campaign", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  List<Orders> orders = new ArrayList<>();
 }

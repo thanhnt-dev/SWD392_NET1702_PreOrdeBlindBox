@@ -45,14 +45,6 @@ public class User extends BaseEntity implements Serializable {
   @Column(nullable = false)
   private Role roleName;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<Orders> orders = new ArrayList<>();
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<Transaction> transactions = new ArrayList<>();
-
   @OneToOne
   @JoinColumn(name = "cart_id")
   private Cart cart;
