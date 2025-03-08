@@ -4,9 +4,7 @@ import com.swd392.preOrderBlindBox.enums.CampaignType;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 import lombok.*;
 
 @Entity
@@ -22,10 +20,10 @@ public class Campaign extends BaseEntity implements Serializable {
   private CampaignType campaignType;
 
   @Column(name = "start_campaign_time", nullable = false)
-  private LocalDate startCampaignTime;
+  private LocalDateTime startCampaignTime;
 
   @Column(name = "end_campaign_time", nullable = false)
-  private LocalDate endCampaignTime;
+  private LocalDateTime endCampaignTime;
 
   @Column(name = "current_placed_blindbox", nullable = false)
   private int currentPlacedBlindbox;

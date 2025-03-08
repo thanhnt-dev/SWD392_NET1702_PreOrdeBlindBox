@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.Specification;
 import java.util.List;
 
 public interface BlindboxSeriesFacade {
-    BaseResponse<List<BlindboxSeriesResponse>> getAllBlindboxSeries();
 
     BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id);
 

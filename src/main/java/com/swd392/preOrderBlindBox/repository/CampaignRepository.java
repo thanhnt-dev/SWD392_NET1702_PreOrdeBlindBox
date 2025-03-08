@@ -9,4 +9,8 @@ import java.util.List;
 @Repository
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
     List<Campaign> findByBlindboxSeriesId(Long blindboxSeriesId);
+
+    List<Campaign> findAllByActiveTrue();
+
+    List<Campaign> findByBlindboxSeriesIdAndActiveTrue(Long blindboxSeriesId);
 }

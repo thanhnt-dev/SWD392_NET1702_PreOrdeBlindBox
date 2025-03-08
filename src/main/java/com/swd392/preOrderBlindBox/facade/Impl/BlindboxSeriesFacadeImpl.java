@@ -20,12 +20,6 @@ public class BlindboxSeriesFacadeImpl implements BlindboxSeriesFacade {
     private final BlindboxAssetService blindboxAssetService;
     private final BlindboxUnitService blindboxUnitService;
 
-    @Override
-    public BaseResponse<List<BlindboxSeriesResponse>> getAllBlindboxSeries() {
-        List<BlindboxSeries> blindboxSeriesList = blindboxSeriesService.getAllBlindboxSeries();
-        List<BlindboxSeriesResponse> responseList = blindboxSeriesList.stream().map(this::toBlindboxSeriesResponse).toList();
-        return BaseResponse.build(responseList, true);
-    }
 
     @Override
     public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
