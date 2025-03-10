@@ -15,6 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,10 +31,25 @@ public class SecurityConfig {
   }
 
   private final String[] WHITE_LIST = {
-    "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
+          "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
   };
 
   private final String[] PUBLIC_LIST = {"/api/v1/users/login", "/api/v1/blindbox-series", "/api/v1/blindbox-series/*"};
+
+  @Bean
+  public CorsFilter corsFilter() {
+    CorsConfiguration corsConfig = new CorsConfiguration();
+    corsConfig.addAllowedOrigin("http://localhost:5173");
+    corsConfig.addAllowedOrigin("https://preorder-blindbox.vercel.app");
+    corsConfig.addAllowedMethod("*");
+    corsConfig.addAllowedHeader("*");
+    corsConfig.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", corsConfig);
+
+    return new CorsFilter(source);
+  }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -48,7 +66,7 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationManager authenticationManager(
-      AuthenticationConfiguration authenticationConfiguration) throws Exception {
+          AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
   }
 
@@ -60,19 +78,20 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
-        .cors(AbstractHttpConfigurer::disable)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            request ->
-                request
-                    .requestMatchers(WHITE_LIST)
-                    .permitAll()
-                    .requestMatchers(PUBLIC_LIST)
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated());
+            .cors(AbstractHttpConfigurer::disable)
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(
+                    session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(
+                    request ->
+                            request
+                                    .requestMatchers(WHITE_LIST)
+                                    .permitAll()
+                                    .requestMatchers(PUBLIC_LIST)
+                                    .permitAll()
+                                    .requestMatchers("/api/v1/users/create-test-user").permitAll()
+                                    .anyRequest()
+                                    .authenticated());
     http.authenticationProvider(authenticationProvider());
     http.addFilterBefore(authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     return http.build();
