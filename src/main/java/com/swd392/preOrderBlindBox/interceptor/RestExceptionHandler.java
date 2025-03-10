@@ -50,4 +50,15 @@ public class RestExceptionHandler {
             false),
         HttpStatus.BAD_REQUEST);
   }
+
+  public ResponseEntity<BaseResponse<ExceptionResponse>> handleResourceNotFoundException(
+      Exception exception) {
+    return new ResponseEntity<>(
+        BaseResponse.build(
+            new ExceptionResponse(
+                ErrorCode.RESOURCES_NOT_FOUND.getCode(),
+                ErrorCode.RESOURCES_NOT_FOUND.getMessage()),
+            false),
+        HttpStatus.NOT_FOUND);
+  }
 }

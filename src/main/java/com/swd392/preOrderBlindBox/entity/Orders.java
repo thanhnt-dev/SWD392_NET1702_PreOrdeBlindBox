@@ -25,6 +25,9 @@ public class Orders extends BaseEntity implements Serializable {
   @Column(name = "user_address", nullable = false)
   public String userAddress;
 
+  @Column(name = "phone_number", nullable = false)
+  public String phoneNumber;
+
   @Column(name = "status", nullable = false)
   @Enumerated(EnumType.STRING)
   private OrderStatus status;
@@ -48,11 +51,4 @@ public class Orders extends BaseEntity implements Serializable {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<OrderItems> orderItems = new ArrayList<>();
-
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<Transaction> transactions = new ArrayList<>();
 }

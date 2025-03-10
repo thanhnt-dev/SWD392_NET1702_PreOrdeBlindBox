@@ -3,9 +3,15 @@ package com.swd392.preOrderBlindBox.entity;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table(name = "blindbox_series")
@@ -23,21 +29,9 @@ public class BlindboxSeries extends BaseEntity implements Serializable {
   private String description;
 
   @Column(name = "opened_at", nullable = false)
-  private LocalDate openedAt;
+  private LocalDateTime openedAt;
 
   @ManyToOne
   @JoinColumn(name = "category_id", nullable = false)
   private Category category;
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<BlindboxAsset> blindboxAssets = new ArrayList<>();
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<BlindboxUnit> blindboxUnits = new ArrayList<>();
-
-  @OneToMany(mappedBy = "blindboxSeries", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<Campaign> campaigns = new ArrayList<>();
 }

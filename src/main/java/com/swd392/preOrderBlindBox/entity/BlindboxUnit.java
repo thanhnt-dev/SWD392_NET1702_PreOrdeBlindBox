@@ -3,12 +3,11 @@ package com.swd392.preOrderBlindBox.entity;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+
 import lombok.*;
 
 @Entity
-@Table(name = "blindbox_units")
+@Table(name = "blindbox_unit")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,8 +34,4 @@ public class BlindboxUnit extends BaseEntity implements Serializable {
       fetch = FetchType.LAZY)
   @JoinColumn(name = "blindbox_series_id", nullable = false)
   private BlindboxSeries blindboxSeries;
-
-  @OneToMany(mappedBy = "blindboxUnit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  private List<OrderItems> orderItems = new ArrayList<>();
 }

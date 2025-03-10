@@ -22,7 +22,4 @@ public class Category extends BaseEntity implements Serializable {
   @JoinColumn(name = "parent_cate_id")
   private Category parentCategory;
 
-  @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @Builder.Default
-  List<BlindboxSeries> blindboxSeries = new ArrayList<>();
 }
