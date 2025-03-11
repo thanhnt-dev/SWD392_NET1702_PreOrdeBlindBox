@@ -19,15 +19,15 @@ public class CampaignTier extends BaseEntity implements Serializable {
   @Column(name = "min_quantity", nullable = false)
   private int minQuantity;
 
-  @Column(name = "max_quantity", nullable = false)
-  private int maxQuantity;
+  @Column(name = "max_quantity", nullable = true)
+  private Integer maxQuantity;  // Changed from int to Integer to allow null values
 
   @Column(name = "discount_percent", nullable = false)
   private int discountPercent;
 
   @ManyToOne(
-      cascade = {CascadeType.ALL},
-      fetch = FetchType.LAZY)
+          cascade = {CascadeType.ALL},
+          fetch = FetchType.LAZY)
   @JoinColumn(name = "campaign_id", nullable = false)
   private Campaign campaign;
 }

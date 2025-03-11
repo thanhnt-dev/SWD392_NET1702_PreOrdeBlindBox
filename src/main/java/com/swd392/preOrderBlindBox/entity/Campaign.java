@@ -32,14 +32,34 @@ public class Campaign extends BaseEntity implements Serializable {
   private int targetBlindboxQuantity;
 
   @Column(name = "deposit_percent", nullable = true)
-  private int depositPercent;
+  private Integer depositPercent;
 
   @Column(name = "base_price", nullable = false)
   private BigDecimal basePrice;
 
+  @Column(name = "locked_price", nullable = true)
+  private BigDecimal lockedPrice;
+
   @ManyToOne(
-      cascade = {CascadeType.ALL},
-      fetch = FetchType.LAZY)
+          cascade = {CascadeType.ALL},
+          fetch = FetchType.LAZY)
   @JoinColumn(name = "blindbox_series_id", nullable = false)
   private BlindboxSeries blindboxSeries;
+
+  /**
+   * Calculates the effective price based on tier discount
+   * @param discountPercent the discount percentage from the tier
+   * @return the calculated price after discount
+   */
+  public BigDecimal calculateEffectivePrice(int discountPercent) {
+    if (discountPercent <= 0) {
+      return basePrice;
+    }
+
+    BigDecimal discount = basePrice.multiply(
+            BigDecimal.valueOf(discountPercent)
+                    .divide(BigDecimal.valueOf(100)));
+
+    return basePrice.subtract(discount);
+  }
 }

@@ -8,9 +8,12 @@ import java.util.List;
 
 @Repository
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
+    // Changed from findAllByActiveTrue to findAllByIsActiveTrue
+    List<Campaign> findAllByIsActiveTrue();
+
+    // Changed from findByBlindboxSeriesId to match entity field name
     List<Campaign> findByBlindboxSeriesId(Long blindboxSeriesId);
 
-    List<Campaign> findAllByActiveTrue();
-
-    List<Campaign> findByBlindboxSeriesIdAndActiveTrue(Long blindboxSeriesId);
+    // Changed from findByBlindboxSeriesIdAndActiveTrue to match entity field name
+    List<Campaign> findByBlindboxSeriesIdAndIsActiveTrue(Long blindboxSeriesId);
 }
