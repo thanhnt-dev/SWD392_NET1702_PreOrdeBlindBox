@@ -3,11 +3,12 @@ package com.swd392.preOrderBlindBox.service.service;
 import com.swd392.preOrderBlindBox.entity.PreorderCampaign;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface CampaignService {
+public interface PreorderCampaignService {
     List<PreorderCampaign> getAllCampaigns();
 
-    List<PreorderCampaign> getAllActiveCampaigns();
+    Optional<PreorderCampaign> getOngoingCampaignOfBlindboxSeries(Long seriesId);
 
     PreorderCampaign getCampaignById(Long id);
 

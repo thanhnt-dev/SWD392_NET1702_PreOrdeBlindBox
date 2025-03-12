@@ -6,6 +6,7 @@ import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.entity.Blindbox;
 import com.swd392.preOrderBlindBox.entity.BlindboxPackage;
 import com.swd392.preOrderBlindBox.repository.repository.BlindboxPackageRepository;
+import com.swd392.preOrderBlindBox.repository.repository.BlindboxRepository;
 import com.swd392.preOrderBlindBox.service.service.BlindboxPackageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BlindboxPackageServiceImpl implements BlindboxPackageService {
     private final BlindboxPackageRepository blindboxPackageRepository;
+    private final BlindboxRepository blindboxRepository;
 
     @Override
     public BlindboxPackage getBlindboxPackageById(Long id) {
@@ -67,5 +69,11 @@ public class BlindboxPackageServiceImpl implements BlindboxPackageService {
     public List<Blindbox> generateBlindboxesForPackage(Long packageId) {
         // Implementation logic should be added here based on business requirements
         throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public int getAvailableBlindboxQuantityOfPackageByPackageId(Long packageId) {
+        return (int) blindboxRepository.findByBlindboxPackageId(packageId).stream()
+                .filter(Blindbox::getIsSold).count();
     }
 }

@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.PackageStatus;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
 import com.swd392.preOrderBlindBox.restcontroller.response.*;
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,19 +22,70 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     private final BlindboxPackageService blindboxPackageService;
     private final BlindboxSeriesItemService blindboxSeriesItemService;
     private final BlindboxAssetService blindboxAssetService;
-    private final BlindboxService blindboxService;
+    private final PreorderCampaignService preorderCampaignService;
     private final ModelMapper mapper;
 
     @Override
     public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
         BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
         BlindboxSeriesDetailsResponse response = mapper.map(blindboxSeries, BlindboxSeriesDetailsResponse.class);
-        List<String> imageUrls = blindboxAssetService.getBlindboxAssetsByEntityId(blindboxSeries.getId()).stream()
-                .map(BlindboxAsset::getMediaKey)
-                .toList();
-        response.setSeriesImageUrls(imageUrls);
+
+        response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId()));
+        response.setItems(getBlindboxItems(blindboxSeries));
+        response.setAvailablePackageUnits(getAvailablePackageUnits(blindboxSeries));
+        response.setAvailableBoxUnits(getAvailableBoxUnits(blindboxSeries));
+        response.setActiveCampaign(getCampaignDetails(blindboxSeries));
+
         return BaseResponse.build(response, true);
     }
+
+    private List<String> getImageUrls(Long entityId) {
+        return blindboxAssetService.getBlindboxAssetsByEntityId(entityId).stream()
+                .map(BlindboxAsset::getMediaKey)
+                .toList();
+    }
+
+    private List<BlindboxSeriesItemResponse> getBlindboxItems(BlindboxSeries blindboxSeries) {
+        List<BlindboxSeriesItemResponse> items = blindboxSeriesItemService.getItemsByBlindboxSeriesId(blindboxSeries.getId()).stream()
+                .map(item -> mapper.map(item, BlindboxSeriesItemResponse.class))
+                .toList();
+
+        items.forEach(item -> {
+            item.setImageUrls(getImageUrls(item.getId()));
+            item.setSeriesId(blindboxSeries.getId());
+        });
+        return items;
+    }
+
+    private int getAvailablePackageUnits(BlindboxSeries blindboxSeries) {
+        return (int) blindboxPackageService.getBlindboxPackagesBySeriesId(blindboxSeries.getId()).stream()
+                .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)
+                .count();
+    }
+
+    private int getAvailableBoxUnits(BlindboxSeries blindboxSeries) {
+        return blindboxPackageService.getBlindboxPackagesBySeriesId(blindboxSeries.getId()).stream()
+                .mapToInt(pkg -> blindboxPackageService.getAvailableBlindboxQuantityOfPackageByPackageId(pkg.getId()))
+                .sum();
+    }
+
+    private PreorderCampaignDetailsResponse getCampaignDetails(BlindboxSeries blindboxSeries) {
+        Optional<PreorderCampaign> campaign = preorderCampaignService.getOngoingCampaignOfBlindboxSeries(blindboxSeries.getId());
+
+        if (campaign.isEmpty()) {
+            return null;
+        }
+
+        PreorderCampaignDetailsResponse campaignResponse = mapper.map(campaign.get(), PreorderCampaignDetailsResponse.class);
+
+        List<CampaignTierResponse> campaignTierResponses = campaign.get().getCampaignTiers().stream()
+                .map(tier -> mapper.map(tier, CampaignTierResponse.class))
+                .toList();
+
+        campaignResponse.setCampaignTiers(campaignTierResponses);
+        return campaignResponse;
+    }
+
 
     @Override
     public Page<BlindboxSeriesResponse> getBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable) {

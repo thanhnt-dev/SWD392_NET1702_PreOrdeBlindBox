@@ -7,10 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CampaignRepository extends JpaRepository<PreorderCampaign, Long> {
+public interface PreorderCampaignRepository extends JpaRepository<PreorderCampaign, Long> {
     List<PreorderCampaign> findByBlindboxSeriesId(Long blindboxSeriesId);
-//
-//    List<PreorderCampaign> findAllByActiveTrue();
-//
-//    List<PreorderCampaign> findByBlindboxSeriesIdAndActiveTrue(Long blindboxSeriesId);
 }

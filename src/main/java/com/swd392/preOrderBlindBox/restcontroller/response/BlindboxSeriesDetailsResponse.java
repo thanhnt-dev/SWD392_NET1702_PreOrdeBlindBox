@@ -21,5 +21,6 @@ public class BlindboxSeriesDetailsResponse {
     private List<String> seriesImageUrls;
     private int availablePackageUnits;
     private int availableBoxUnits;
-    private PreorderCampaignResponse activeCampaign;
+    private List<BlindboxSeriesItemResponse> items;
+    private PreorderCampaignDetailsResponse activeCampaign;
 }
