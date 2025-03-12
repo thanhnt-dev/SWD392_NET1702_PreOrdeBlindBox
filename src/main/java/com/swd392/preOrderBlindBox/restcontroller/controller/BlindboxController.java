@@ -26,7 +26,7 @@ public class BlindboxController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(
-            summary = "Get blindbox series details by id",
+            summary = "Get blindbox series details by id, along with ongoing campaign (if any) and its tiers",
             tags = {"Blindbox Series APIs"})
     public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesById(@PathVariable Long id) {
         return this.blindboxFacade.getBlindboxSeriesWithDetailsById(id);
