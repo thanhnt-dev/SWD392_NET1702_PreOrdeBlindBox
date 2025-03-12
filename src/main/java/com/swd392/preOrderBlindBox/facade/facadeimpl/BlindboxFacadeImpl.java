@@ -55,7 +55,14 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
         BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
         BlindboxSeriesManagementDetailsResponse response = mapper.map(blindboxSeries, BlindboxSeriesManagementDetailsResponse.class);
         List<BlindboxAsset> assets = blindboxAssetService.getBlindboxAssetsByEntityId(blindboxSeries.getId());
-        response.setAssets(assets);
+        List<BlindboxAssetResponse> assetResponses = assets.stream()
+                .map(asset -> {
+                    BlindboxAssetResponse assetResponse = new BlindboxAssetResponse();
+                    mapper.map(asset, assetResponse);
+                    return assetResponse;
+                })
+                .toList();
+        response.setAssets(assetResponses);
         return BaseResponse.build(response, true);
     }
 }
