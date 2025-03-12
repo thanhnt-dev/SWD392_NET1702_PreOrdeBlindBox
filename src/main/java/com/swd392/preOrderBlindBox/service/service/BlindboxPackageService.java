@@ -20,4 +20,6 @@ public interface BlindboxPackageService {
     void updatePackageStatus(Long id, PackageStatus status);
 
     List<Blindbox> generateBlindboxesForPackage(Long packageId);
+
+    int getAvailableBlindboxQuantityOfPackageByPackageId(Long packageId);
 }

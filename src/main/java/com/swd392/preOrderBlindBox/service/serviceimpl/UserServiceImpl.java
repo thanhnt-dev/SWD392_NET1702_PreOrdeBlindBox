@@ -7,9 +7,12 @@ import com.swd392.preOrderBlindBox.repository.repository.UserRepository;
 import com.swd392.preOrderBlindBox.infrastructure.security.SecurityUserDetails;
 import com.swd392.preOrderBlindBox.service.service.UserService;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -37,5 +40,14 @@ public class UserServiceImpl implements UserService {
         List.of(new SimpleGrantedAuthority(user.getRoleName().toString()));
 
     return SecurityUserDetails.build(user, authorityList);
+  }
+
+  @Override
+  public Optional<User> getCurrentUser() {
+    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    if (principal instanceof UserDetails userDetails) {
+      return userRepository.findByEmail(userDetails.getUsername());
+    }
+    return Optional.empty();
   }
 }

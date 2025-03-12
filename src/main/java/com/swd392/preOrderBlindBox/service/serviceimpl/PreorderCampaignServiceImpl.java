@@ -3,37 +3,48 @@ package com.swd392.preOrderBlindBox.service.serviceimpl;
 import com.swd392.preOrderBlindBox.entity.PreorderCampaign;
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
-import com.swd392.preOrderBlindBox.repository.repository.CampaignRepository;
-import com.swd392.preOrderBlindBox.service.service.CampaignService;
+import com.swd392.preOrderBlindBox.repository.repository.CampaignTierRepository;
+import com.swd392.preOrderBlindBox.repository.repository.PreorderCampaignRepository;
+import com.swd392.preOrderBlindBox.service.service.PreorderCampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class CampaignServiceImpl implements CampaignService {
-    private final CampaignRepository campaignRepository;
+public class PreorderCampaignServiceImpl implements PreorderCampaignService {
+    private final PreorderCampaignRepository preorderCampaignRepository;
+    private final CampaignTierRepository campaignTierRepository;
 
     @Override
     public List<PreorderCampaign> getAllCampaigns() {
-        return campaignRepository.findAll();
+        return preorderCampaignRepository.findAll();
     }
 
     @Override
-    public List<PreorderCampaign> getAllActiveCampaigns() {
-        throw new UnsupportedOperationException();
+    public Optional<PreorderCampaign> getOngoingCampaignOfBlindboxSeries(Long seriesId) {
+        List<PreorderCampaign> campaigns = preorderCampaignRepository.findByBlindboxSeriesId(seriesId);
+        PreorderCampaign result = campaigns.stream()
+                .filter(campaign ->
+                        campaign.getStartCampaignTime().isBefore(LocalDateTime.now()) &&
+                                campaign.getEndCampaignTime().isAfter(LocalDateTime.now()))
+                .findFirst()
+                .orElse(null);
+        return Optional.ofNullable(result);
     }
 
     @Override
     public PreorderCampaign getCampaignById(Long id) {
-        return campaignRepository.findById(id)
+        return preorderCampaignRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
     }
 
     @Override
     public List<PreorderCampaign> getCampaignsByBlindboxSeriesId(Long blindboxSeriesId) {
-        return campaignRepository.findByBlindboxSeriesId(blindboxSeriesId);
+        return preorderCampaignRepository.findByBlindboxSeriesId(blindboxSeriesId);
     }
 
     @Override
@@ -43,7 +54,7 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public PreorderCampaign createCampaign(PreorderCampaign preorderCampaign) {
-        return campaignRepository.save(preorderCampaign);
+        return preorderCampaignRepository.save(preorderCampaign);
     }
 
     @Override
@@ -52,18 +63,18 @@ public class CampaignServiceImpl implements CampaignService {
             throw new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND);
         }
 
-        PreorderCampaign existingPreorderCampaign = campaignRepository.findById(id)
+        PreorderCampaign existingPreorderCampaign = preorderCampaignRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
         existingPreorderCampaign.setCampaignType(preorderCampaign.getCampaignType());
         existingPreorderCampaign.setEndCampaignTime(preorderCampaign.getEndCampaignTime());
         existingPreorderCampaign.setStartCampaignTime(preorderCampaign.getStartCampaignTime());
 
-        return campaignRepository.save(existingPreorderCampaign);
+        return preorderCampaignRepository.save(existingPreorderCampaign);
     }
 
     @Override
     public void deleteCampaign(Long id) {
-        campaignRepository.deleteById(id);
+        preorderCampaignRepository.deleteById(id);
     }
 }
