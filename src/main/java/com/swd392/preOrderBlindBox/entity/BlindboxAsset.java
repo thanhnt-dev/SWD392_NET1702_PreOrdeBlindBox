@@ -12,12 +12,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class BlindboxAsset extends BaseEntity implements Serializable {
-  @Column(nullable = false, length = 100)
+  @Column(name = "media_key", nullable = false, length = 100)
   private String mediaKey;
 
-  @ManyToOne(
-      cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH},
-      fetch = FetchType.LAZY)
-  @JoinColumn(name = "blindbox_id", nullable = false)
-  private BlindboxSeries blindboxSeries;
+  @Column(name = "entity_id", nullable = false)
+  private Long entityId;
 }

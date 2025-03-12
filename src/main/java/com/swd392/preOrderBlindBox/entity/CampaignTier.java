@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.entity;
 
+import com.swd392.preOrderBlindBox.common.enums.TierStatus;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import lombok.*;
@@ -13,21 +14,26 @@ import lombok.*;
 @Builder
 public class CampaignTier extends BaseEntity implements Serializable {
 
-  @Column(name = "tier_name", nullable = false, length = 50)
-  private String tierName;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "campaign_id", nullable = false)
+  private PreorderCampaign campaign;
 
-  @Column(name = "min_quantity", nullable = false)
-  private int minQuantity;
+  @Column(length = 50)
+  private String alias;
 
-  @Column(name = "max_quantity", nullable = false)
-  private int maxQuantity;
+  @Column(name = "current_count", nullable = false)
+  private Integer currentCount;
+
+  @Column(name = "threshold_quantity", nullable = false)
+  private Integer thresholdQuantity;
+
+  @Column(name = "tier_order", nullable = false)
+  private Integer tierOrder;
 
   @Column(name = "discount_percent", nullable = false)
-  private int discountPercent;
+  private Integer discountPercent;
 
-  @ManyToOne(
-      cascade = {CascadeType.ALL},
-      fetch = FetchType.LAZY)
-  @JoinColumn(name = "campaign_id", nullable = false)
-  private Campaign campaign;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "tier_status", nullable = false)
+  private TierStatus tierStatus;
 }

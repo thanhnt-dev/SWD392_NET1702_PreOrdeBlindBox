@@ -1,5 +1,7 @@
 package com.swd392.preOrderBlindBox.entity;
 
+import com.swd392.preOrderBlindBox.common.enums.CampaignType;
+import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -14,20 +16,28 @@ import lombok.*;
 @Builder
 public class CartItem extends BaseEntity implements Serializable {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
-    @ManyToOne
-    @JoinColumn(name = "blindbox_unit_id", nullable = false)
-    private BlindboxUnit blindboxUnit;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id", nullable = false)
+    private BlindboxSeries series;
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 1")
-    private Integer quantity;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false)
+    private ProductType productType;
+
+    @Column(nullable = false, columnDefinition = "int default 1")
+    private Integer quantity = 1;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "discount_percent", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer discountPercent;
+    @Column(name = "discount_percent", nullable = false, columnDefinition = "int default 0")
+    private Integer discountPercent = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item_campaign_type", nullable = false)
+    private CampaignType itemCampaignType;
 }

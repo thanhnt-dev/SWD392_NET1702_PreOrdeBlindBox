@@ -1,7 +1,7 @@
 package com.swd392.preOrderBlindBox.entity;
 
-import com.swd392.preOrderBlindBox.enums.TransactionStatus;
-import com.swd392.preOrderBlindBox.enums.TransactionType;
+import com.swd392.preOrderBlindBox.common.enums.TransactionStatus;
+import com.swd392.preOrderBlindBox.common.enums.TransactionType;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -26,7 +26,7 @@ public class Transaction extends BaseEntity implements Serializable {
       cascade = {CascadeType.ALL},
       fetch = FetchType.LAZY)
   @JoinColumn(name = "order_id", nullable = false)
-  private Orders order;
+  private Preorder preorder;
 
   @Column(name = "transaction_code", nullable = false, unique = true, length = 20)
   private String transactionCode;
