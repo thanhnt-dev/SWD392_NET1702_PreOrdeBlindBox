@@ -8,7 +8,7 @@ import java.util.List;
 import lombok.*;
 
 @Entity
-@Table(name = "blindbox_unit")
+@Table(name = "blindbox_packages")
 @Getter
 @Setter
 @NoArgsConstructor

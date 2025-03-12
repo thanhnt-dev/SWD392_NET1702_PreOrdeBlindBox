@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Entity
-@Table(name = "blindbox_series_item")
+@Table(name = "blindbox_series_items")
 @Getter
 @Setter
 @NoArgsConstructor

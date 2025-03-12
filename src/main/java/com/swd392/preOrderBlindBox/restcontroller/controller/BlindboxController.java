@@ -2,7 +2,7 @@ package com.swd392.preOrderBlindBox.restcontroller.controller;
 
 
 import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
-import com.swd392.preOrderBlindBox.facade.facade.BlindboxSeriesFacade;
+import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesDetailsResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesResponse;
@@ -18,10 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/blindbox-series")
+@RequestMapping("/api/v1/blindbox")
 @RequiredArgsConstructor
-public class BlindboxSeriesController {
-    private final BlindboxSeriesFacade blindboxSeriesFacade;
+public class BlindboxController {
+    private final BlindboxFacade blindboxFacade;
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -29,7 +29,7 @@ public class BlindboxSeriesController {
             summary = "Get blindbox series details by id",
             tags = {"Blindbox Series APIs"})
     public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesById(@PathVariable Long id) {
-        return this.blindboxSeriesFacade.getBlindboxSeriesWithDetailsById(id);
+        return this.blindboxFacade.getBlindboxSeriesWithDetailsById(id);
     }
 
     @GetMapping
@@ -48,7 +48,7 @@ public class BlindboxSeriesController {
             spec = spec.and(BlindboxSeriesSpecification.hasSeriesName(seriesName));
         }
 
-        Page<BlindboxSeriesResponse> blindboxSeriesPage = blindboxSeriesFacade.getBlindboxSeries(spec, pageable);
+        Page<BlindboxSeriesResponse> blindboxSeriesPage = blindboxFacade.getBlindboxSeries(spec, pageable);
 
         return BaseResponse.build(blindboxSeriesPage, true);
     }

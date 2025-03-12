@@ -5,7 +5,7 @@ import java.io.Serializable;
 import lombok.*;
 
 @Entity
-@Table(name = "blindbox_asset")
+@Table(name = "blindbox_assets")
 @Getter
 @Setter
 @NoArgsConstructor

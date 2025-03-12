@@ -1,7 +1,7 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
 import com.swd392.preOrderBlindBox.entity.*;
-import com.swd392.preOrderBlindBox.facade.facade.BlindboxSeriesFacade;
+import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
 import com.swd392.preOrderBlindBox.restcontroller.response.*;
 import com.swd392.preOrderBlindBox.service.service.*;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
-public class BlindboxSeriesFacadeImpl implements BlindboxSeriesFacade {
+public class BlindboxFacadeImpl implements BlindboxFacade {
     private final BlindboxSeriesService blindboxSeriesService;
     private final BlindboxPackageService blindboxPackageService;
     private final BlindboxSeriesItemService blindboxSeriesItemService;
