@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/blindbox")
+@RequestMapping("/api/${api.version}/blindbox")
 @RequiredArgsConstructor
 public class BlindboxController {
     private final BlindboxFacade blindboxFacade;

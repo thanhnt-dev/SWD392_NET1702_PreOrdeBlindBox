@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class BlindboxFacadeImpl implements BlindboxFacade {
@@ -25,19 +27,35 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
         BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
         BlindboxSeriesDetailsResponse response = mapper.map(blindboxSeries, BlindboxSeriesDetailsResponse.class);
+        List<String> imageUrls = blindboxAssetService.getBlindboxAssetsByEntityId(blindboxSeries.getId()).stream()
+                .map(BlindboxAsset::getMediaKey)
+                .toList();
+        response.setSeriesImageUrls(imageUrls);
         return BaseResponse.build(response, true);
     }
 
     @Override
     public Page<BlindboxSeriesResponse> getBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable) {
         Page<BlindboxSeries> blindboxSeriesPage = blindboxSeriesService.getBlindboxSeries(spec, pageable);
-        return blindboxSeriesPage.map(series -> mapper.map(series, BlindboxSeriesResponse.class));
+
+        return blindboxSeriesPage.map(series -> {
+            BlindboxSeriesResponse response = mapper.map(series, BlindboxSeriesResponse.class);
+
+            List<String> imageUrls = blindboxAssetService.getBlindboxAssetsByEntityId(series.getId()).stream()
+                    .map(BlindboxAsset::getMediaKey)
+                    .toList();
+            response.setSeriesImageUrls(imageUrls);
+
+            return response;
+        });
     }
 
     @Override
     public BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(Long id) {
         BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
         BlindboxSeriesManagementDetailsResponse response = mapper.map(blindboxSeries, BlindboxSeriesManagementDetailsResponse.class);
+        List<BlindboxAsset> assets = blindboxAssetService.getBlindboxAssetsByEntityId(blindboxSeries.getId());
+        response.setAssets(assets);
         return BaseResponse.build(response, true);
     }
 }

@@ -1,13 +1,11 @@
 package com.swd392.preOrderBlindBox.restcontroller.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Setter
 @Builder
 public class BlindboxResponse {
     private Long id;
