@@ -2,6 +2,7 @@ package com.swd392.preOrderBlindBox.entity;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,16 +23,24 @@ import org.hibernate.annotations.FetchMode;
 @Builder
 public class BlindboxSeries extends BaseEntity implements Serializable {
 
-  @Column(nullable = false, length = 100)
+  @Column(name = "series_name", nullable = false, length = 50)
   private String seriesName;
 
   @Column(columnDefinition = "TEXT")
   private String description;
 
-  @Column(name = "opened_at", nullable = false)
-  private LocalDateTime openedAt;
+  @Column(name = "package_price", nullable = false, precision = 10, scale = 2)
+  private BigDecimal packagePrice;
 
-  @ManyToOne
-  @JoinColumn(name = "category_id", nullable = false)
-  private Category category;
+  @Column(name = "box_price", nullable = false, precision = 10, scale = 2)
+  private BigDecimal boxPrice;
+
+  @OneToMany(mappedBy = "blindboxSeries")
+  private List<BlindboxSeriesItem> items;
+
+  @OneToMany(mappedBy = "series")
+  private List<BlindboxPackage> packages;
+
+  @OneToMany(mappedBy = "blindboxSeries")
+  private List<PreorderCampaign> campaigns;
 }

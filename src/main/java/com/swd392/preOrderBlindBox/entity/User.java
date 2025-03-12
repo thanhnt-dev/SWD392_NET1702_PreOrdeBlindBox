@@ -1,12 +1,11 @@
 package com.swd392.preOrderBlindBox.entity;
 
-import com.swd392.preOrderBlindBox.enums.Gender;
-import com.swd392.preOrderBlindBox.enums.Role;
+import com.swd392.preOrderBlindBox.common.enums.Gender;
+import com.swd392.preOrderBlindBox.common.enums.Role;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

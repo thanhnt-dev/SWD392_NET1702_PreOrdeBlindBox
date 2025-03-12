@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "blindbox_series_item")
@@ -15,21 +16,16 @@ import java.math.BigDecimal;
 @Builder
 public class BlindboxSeriesItem extends BaseEntity implements Serializable {
 
-    @Column(name = "item_name", nullable = false, length = 100)
-    private String itemName;
-
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
-    @Column(name = "image_url", length = 255)
-    private String imageUrl;
-
-    @Column(name = "rarity_percentage", precision = 5, scale = 2)
-    private BigDecimal rarityPercentage;
-
-    @ManyToOne(
-            cascade = {CascadeType.ALL},
-            fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "blindbox_series_id", nullable = false)
     private BlindboxSeries blindboxSeries;
+
+    @Column(name = "item_name", length = 50)
+    private String itemName;
+
+    @Column(name = "item_chance")
+    private Integer itemChance;
+
+    @OneToMany(mappedBy = "revealedItem")
+    private List<Blindbox> blindboxes;
 }

@@ -10,10 +10,5 @@ public class BlindboxSeriesSpecification {
                 criteriaBuilder.like(root.get("seriesName"), "%" + seriesName + "%");
     }
 
-    public static Specification<BlindboxSeries> hasCategory(Long categoryId) {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("category").get("id"), categoryId);
-    }
-
     // Add more specifications as needed
 }
