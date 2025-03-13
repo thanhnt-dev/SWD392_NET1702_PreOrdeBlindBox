@@ -18,11 +18,11 @@ public class CampaignController {
   private final CampaignFacade campaignFacade;
 
   @PostMapping()
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('STAFF')")
   @SecurityRequirement(name = "Bearer Authentication")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
-      summary = "Create campaign for Admin",
+      summary = "Create campaign for Staff",
       tags = {"Campaign APIs"})
   BaseResponse<Void> createCampaign(@RequestBody PreorderCampaignRequest request) {
     return campaignFacade.createCampaignTier(request);
