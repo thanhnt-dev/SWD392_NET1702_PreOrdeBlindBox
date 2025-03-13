@@ -1,5 +1,7 @@
 package com.swd392.preOrderBlindBox.service.serviceimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.TierStatus;
+import com.swd392.preOrderBlindBox.entity.CampaignTier;
 import com.swd392.preOrderBlindBox.entity.PreorderCampaign;
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
@@ -27,13 +29,13 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
     @Override
     public Optional<PreorderCampaign> getOngoingCampaignOfBlindboxSeries(Long seriesId) {
         List<PreorderCampaign> campaigns = preorderCampaignRepository.findByBlindboxSeriesId(seriesId);
-        PreorderCampaign result = campaigns.stream()
+        LocalDateTime now = LocalDateTime.now();
+
+        return campaigns.stream()
                 .filter(campaign ->
-                        campaign.getStartCampaignTime().isBefore(LocalDateTime.now()) &&
-                                campaign.getEndCampaignTime().isAfter(LocalDateTime.now()))
-                .findFirst()
-                .orElse(null);
-        return Optional.ofNullable(result);
+                        campaign.getStartCampaignTime().isBefore(now) &&
+                                campaign.getEndCampaignTime().isAfter(now))
+                .findFirst();
     }
 
     @Override
@@ -72,6 +74,43 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
 
         return preorderCampaignRepository.save(existingPreorderCampaign);
     }
+
+    @Override
+    public int getCurrentUnitsCountOfActiveTierOfOngoingCampaign(Long campaignId) {
+        validateOngoingCampaign(campaignId);
+        return findActiveTier(campaignId)
+                .map(CampaignTier::getCurrentCount)
+                .orElse(0);
+    }
+
+    @Override
+    public int getDiscountOfActiveTierOfOnGoingCampaign(Long campaignId) {
+        validateOngoingCampaign(campaignId);
+        return findActiveTier(campaignId)
+                .map(CampaignTier::getDiscountPercent)
+                .orElse(0);
+    }
+
+    private void validateOngoingCampaign(Long campaignId) {
+        PreorderCampaign campaign = preorderCampaignRepository.findById(campaignId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+        // Ensure the campaign is active and ongoing
+        if (!campaign.isActive() ||
+                campaign.getStartCampaignTime().isAfter(LocalDateTime.now()) ||
+                campaign.getEndCampaignTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("No active ongoing campaign found for the given ID.");
+        }
+
+    }
+
+    private Optional<CampaignTier> findActiveTier(Long campaignId) {
+        List<CampaignTier> tiers = campaignTierRepository.findByCampaignId(campaignId);
+        return tiers.stream()
+                .filter(tier -> tier.getTierStatus() == TierStatus.PROCESSING)
+                .findFirst();
+    }
+
 
     @Override
     public void deleteCampaign(Long id) {
