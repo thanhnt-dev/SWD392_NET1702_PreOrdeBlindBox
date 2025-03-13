@@ -19,7 +19,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BlindboxFacadeImpl implements BlindboxFacade {
     private final BlindboxSeriesService blindboxSeriesService;
-    private final BlindboxPackageService blindboxPackageService;
     private final BlindboxSeriesItemService blindboxSeriesItemService;
     private final BlindboxAssetService blindboxAssetService;
     private final PreorderCampaignService preorderCampaignService;
@@ -32,8 +31,8 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
         response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId()));
         response.setItems(getBlindboxItems(blindboxSeries));
-        response.setAvailablePackageUnits(getAvailablePackageUnits(blindboxSeries));
-        response.setAvailableBoxUnits(getAvailableBoxUnits(blindboxSeries));
+        response.setAvailablePackageUnits(blindboxSeriesService.getAvailablePackageQuantityOfSeries(blindboxSeries.getId()));
+        response.setAvailableBoxUnits(blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(blindboxSeries.getId()));
         response.setActiveCampaign(getCampaignDetails(blindboxSeries));
 
         return BaseResponse.build(response, true);
@@ -55,18 +54,6 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
             item.setSeriesId(blindboxSeries.getId());
         });
         return items;
-    }
-
-    private int getAvailablePackageUnits(BlindboxSeries blindboxSeries) {
-        return (int) blindboxPackageService.getBlindboxPackagesBySeriesId(blindboxSeries.getId()).stream()
-                .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)
-                .count();
-    }
-
-    private int getAvailableBoxUnits(BlindboxSeries blindboxSeries) {
-        return blindboxPackageService.getBlindboxPackagesBySeriesId(blindboxSeries.getId()).stream()
-                .mapToInt(pkg -> blindboxPackageService.getAvailableBlindboxQuantityOfPackageByPackageId(pkg.getId()))
-                .sum();
     }
 
     private PreorderCampaignDetailsResponse getCampaignDetails(BlindboxSeries blindboxSeries) {

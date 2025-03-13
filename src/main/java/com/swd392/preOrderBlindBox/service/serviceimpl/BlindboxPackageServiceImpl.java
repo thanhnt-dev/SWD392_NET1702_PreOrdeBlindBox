@@ -74,6 +74,7 @@ public class BlindboxPackageServiceImpl implements BlindboxPackageService {
     @Override
     public int getAvailableBlindboxQuantityOfPackageByPackageId(Long packageId) {
         return (int) blindboxRepository.findByBlindboxPackageId(packageId).stream()
-                .filter(Blindbox::getIsSold).count();
+                .filter(blindbox -> !blindbox.getIsSold())
+                .count();
     }
 }
