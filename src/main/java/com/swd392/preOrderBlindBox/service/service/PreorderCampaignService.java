@@ -19,9 +19,9 @@ public interface PreorderCampaignService {
 
   PreorderCampaign updateCampaign(PreorderCampaign preorderCampaign, Long id);
 
-    void deleteCampaign(Long id);
+  void deleteCampaign(Long id);
 
-    int getCurrentUnitsCountOfActiveTierOfOngoingCampaign(Long campaignId);
+  int getCurrentUnitsCountOfActiveTierOfOngoingCampaign(Long campaignId);
 
-    int getDiscountOfActiveTierOfOnGoingCampaign(Long campaignId);
+  int getDiscountOfActiveTierOfOnGoingCampaign(Long campaignId);
 }

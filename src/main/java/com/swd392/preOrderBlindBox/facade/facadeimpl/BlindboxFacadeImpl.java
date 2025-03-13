@@ -1,19 +1,19 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
-import com.swd392.preOrderBlindBox.common.enums.PackageStatus;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
+import com.swd392.preOrderBlindBox.restcontroller.request.CreateBlindboxSeriesRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.*;
 import com.swd392.preOrderBlindBox.service.service.*;
+import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,11 +31,13 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     BlindboxSeriesDetailsResponse response =
         mapper.map(blindboxSeries, BlindboxSeriesDetailsResponse.class);
 
-        response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId()));
-        response.setItems(getBlindboxItems(blindboxSeries));
-        response.setAvailablePackageUnits(blindboxSeriesService.getAvailablePackageQuantityOfSeries(blindboxSeries.getId()));
-        response.setAvailableBoxUnits(blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(blindboxSeries.getId()));
-        response.setActiveCampaign(getCampaignDetails(blindboxSeries));
+    response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId()));
+    response.setItems(getBlindboxItems(blindboxSeries));
+    response.setAvailablePackageUnits(
+        blindboxSeriesService.getAvailablePackageQuantityOfSeries(blindboxSeries.getId()));
+    response.setAvailableBoxUnits(
+        blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(blindboxSeries.getId()));
+    response.setActiveCampaign(getCampaignDetails(blindboxSeries));
 
     return BaseResponse.build(response, true);
   }
@@ -60,8 +62,9 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     return items;
   }
 
-    private PreorderCampaignDetailsResponse getCampaignDetails(BlindboxSeries blindboxSeries) {
-        Optional<PreorderCampaign> campaign = preorderCampaignService.getOngoingCampaignOfBlindboxSeries(blindboxSeries.getId());
+  private PreorderCampaignDetailsResponse getCampaignDetails(BlindboxSeries blindboxSeries) {
+    Optional<PreorderCampaign> campaign =
+        preorderCampaignService.getOngoingCampaignOfBlindboxSeries(blindboxSeries.getId());
 
     if (campaign.isEmpty()) {
       return null;

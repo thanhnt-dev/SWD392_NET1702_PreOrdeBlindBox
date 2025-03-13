@@ -77,10 +77,11 @@ public class BlindboxPackageServiceImpl implements BlindboxPackageService {
     throw new UnsupportedOperationException("Not implemented yet");
   }
 
-    @Override
-    public int getAvailableBlindboxQuantityOfPackageByPackageId(Long packageId) {
-        return (int) blindboxRepository.findByBlindboxPackageId(packageId).stream()
-                .filter(blindbox -> !blindbox.getIsSold())
-                .count();
-    }
+  @Override
+  public int getAvailableBlindboxQuantityOfPackageByPackageId(Long packageId) {
+    return (int)
+        blindboxRepository.findByBlindboxPackageId(packageId).stream()
+            .filter(blindbox -> !blindbox.getIsSold())
+            .count();
+  }
 }

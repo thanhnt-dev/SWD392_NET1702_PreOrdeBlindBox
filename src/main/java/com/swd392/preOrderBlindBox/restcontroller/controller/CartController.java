@@ -45,29 +45,41 @@ public class CartController {
     return BaseResponse.build(mapper.map(cartService.getOrCreateCart(), CartResponse.class), true);
   }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(
-            summary = "Add an item to cart",
-            tags = {"Cart APIs"})
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Item added to cart successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request",
-                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Available quantity is insufficient",
-                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Available discounted quantity is insufficient",
-                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Resource not found",
-                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
-    })
-    public BaseResponse<CartResponse> addItemsToCart(@Valid @RequestBody CartItemRequest cartItemRequest) {
-        CartItem cartItem = mapper.map(cartItemRequest, CartItem.class);
-        cartService.addToCart(cartItem);
-        return getUpdatedCartResponse();
-    }
+  @PostMapping
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(
+      summary = "Add an item to cart",
+      tags = {"Cart APIs"})
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Item added to cart successfully"),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request",
+            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Available quantity is insufficient",
+            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Available discounted quantity is insufficient",
+            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Resource not found",
+            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Internal server error",
+            content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+      })
+  public BaseResponse<CartResponse> addItemsToCart(
+      @Valid @RequestBody CartItemRequest cartItemRequest) {
+    CartItem cartItem = mapper.map(cartItemRequest, CartItem.class);
+    cartService.addToCart(cartItem);
+    return getUpdatedCartResponse();
+  }
 
   @PutMapping("/{cartItemId}")
   @ResponseStatus(HttpStatus.OK)

@@ -19,9 +19,9 @@ public interface BlindboxSeriesService {
 
   void deactiveBlindboxSeries(Long id);
 
-    Page<BlindboxSeries> getBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable);
+  Page<BlindboxSeries> getBlindboxSeries(Specification<BlindboxSeries> spec, Pageable pageable);
 
-    int getAvailablePackageQuantityOfSeries(Long packageId);
+  int getAvailablePackageQuantityOfSeries(Long packageId);
 
-    int getAvailableBlindboxQuantityOfSeries(Long packageId);
+  int getAvailableBlindboxQuantityOfSeries(Long packageId);
 }
