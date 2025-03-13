@@ -6,12 +6,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
-    List<CartItem> findByCartId(Long cartId);
+  List<CartItem> findByCartId(Long cartId);
 
-    Optional<CartItem> findByCartIdAndSeriesId(Long cartId, Long seriesId);
+  Optional<CartItem> findByCartIdAndSeriesId(Long cartId, Long seriesId);
 
-    void deleteByCartId(Long cartId);
+  void deleteByCartId(Long cartId);
 }

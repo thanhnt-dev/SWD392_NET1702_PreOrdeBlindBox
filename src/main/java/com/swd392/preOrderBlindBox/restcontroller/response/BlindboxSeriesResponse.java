@@ -1,10 +1,8 @@
 package com.swd392.preOrderBlindBox.restcontroller.response;
 
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.util.List;
-
+import lombok.*;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,11 +10,11 @@ import java.util.List;
 @Setter
 @Builder
 public class BlindboxSeriesResponse {
-    private Long id;
-    private String seriesName;
-    private String description;
-    private BigDecimal packagePrice;
-    private BigDecimal boxPrice;
-    private boolean isActive;
-    private List<String> seriesImageUrls;
+  private Long id;
+  private String seriesName;
+  private String description;
+  private BigDecimal packagePrice;
+  private BigDecimal boxPrice;
+  private boolean isActive;
+  private List<String> seriesImageUrls;
 }

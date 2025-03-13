@@ -10,7 +10,10 @@ public enum ErrorCode {
   USER_IS_DEACTIVATED("1001", "Your account is deactivated"),
   BAD_CREDENTIAL_LOGIN("1002", "Invalid username or password"),
   RESOURCES_NOT_FOUND("1003", "Can not find resources"),
-  UNAUTHORIZED_CART_ACCESS("1004", "Cannot access cart that doesn't belong to current user");
+  PHONE_AND_MAIL_EXIST("1004", "Both phone number and email already exist"),
+  EMAIL_EXIST("1005", "Email already exists"),
+  PHONE_EXIST("1006", "Phone number already exists"),
+  UNAUTHORIZED_CART_ACCESS("1007", "Cannot access cart that doesn't belong to current user");
 
   private final String code;
   private final String message;

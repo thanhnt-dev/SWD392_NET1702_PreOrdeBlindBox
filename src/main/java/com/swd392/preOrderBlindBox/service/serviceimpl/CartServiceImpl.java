@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -47,11 +50,11 @@ public class CartServiceImpl implements CartService {
         return cartItemRepository.findByCartId(cartId);
     }
 
-    @Override
-    @Transactional
-    public CartItem addToCart(CartItem cartItem) {
-        Cart cart = getOrCreateCart();
-        cartItem.setCart(cart);
+  @Override
+  @Transactional
+  public CartItem addToCart(CartItem cartItem) {
+    Cart cart = getOrCreateCart();
+    cartItem.setCart(cart);
 
         CartItem existingItem = cartItemRepository.findByCartIdAndSeriesId(cart.getId(), cartItem.getSeries().getId()).orElse(null);
         PreorderCampaign ongoingCampaign = preorderCampaignService.getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId()).orElse(null);
@@ -78,55 +81,64 @@ public class CartServiceImpl implements CartService {
 
 
 
-    @Override
-    @Transactional
-    public CartItem updateCartItemQuantity(Long cartItemId, int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        }
-
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
-
-        verifyCartOwnership(cartItem);
-
-        cartItem.setQuantity(quantity);
-        return cartItemRepository.save(cartItem);
+  @Override
+  @Transactional
+  public CartItem updateCartItemQuantity(Long cartItemId, int quantity) {
+    if (quantity <= 0) {
+      throw new IllegalArgumentException("Quantity must be greater than zero");
     }
 
-    @Override
-    @Transactional
-    public void removeCartItem(Long cartItemId) {
-        CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+    CartItem cartItem =
+        cartItemRepository
+            .findById(cartItemId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
-        verifyCartOwnership(cartItem);
+    verifyCartOwnership(cartItem);
 
-        cartItemRepository.deleteById(cartItemId);
+    cartItem.setQuantity(quantity);
+    return cartItemRepository.save(cartItem);
+  }
+
+  @Override
+  @Transactional
+  public void removeCartItem(Long cartItemId) {
+    CartItem cartItem =
+        cartItemRepository
+            .findById(cartItemId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+    verifyCartOwnership(cartItem);
+
+    cartItemRepository.deleteById(cartItemId);
+  }
+
+  @Override
+  @Transactional
+  public void clearCart(Long cartId) {
+    Cart cart =
+        cartRepository
+            .findById(cartId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+    Optional<User> currentUser = userService.getCurrentUser();
+    if (currentUser.isPresent()
+        && (cart.getUser() == null || !cart.getUser().getId().equals(currentUser.get().getId()))) {
+      throw new SecurityException("Cannot clear cart that doesn't belong to current user");
     }
 
-    @Override
-    @Transactional
-    public void clearCart(Long cartId) {
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+    cartItemRepository.deleteByCartId(cartId);
+  }
 
-        Optional<User> currentUser = userService.getCurrentUser();
-        if (currentUser.isPresent() && (cart.getUser() == null || !cart.getUser().getId().equals(currentUser.get().getId()))) {
-            throw new SecurityException("Cannot clear cart that doesn't belong to current user");
-        }
+  @Override
+  public BigDecimal calculateCartTotal(Long cartId) {
+    Cart cart =
+        cartRepository
+            .findById(cartId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
-        cartItemRepository.deleteByCartId(cartId);
-    }
+    verifyCartOwnership(cart);
 
-    @Override
-    public BigDecimal calculateCartTotal(Long cartId) {
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
-
-        verifyCartOwnership(cart);
-
-        List<CartItem> cartItems = getCartItems(cartId);
+    List<CartItem> cartItems = getCartItems(cartId);
 
         return cartItems.stream()
                 .map(item -> {
@@ -146,8 +158,8 @@ public class CartServiceImpl implements CartService {
             throw new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND);
         }
 
-        verifyCartOwnership(cartItem.getCart());
-    }
+    verifyCartOwnership(cartItem.getCart());
+  }
 
     private void verifyCartOwnership(Cart cart) {
         Optional<User> currentUser = userService.getCurrentUser();

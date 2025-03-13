@@ -11,8 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter
 @Builder
 public class BlindboxSeriesItemsCreateRequest {
-    private Long seriesId;
-    private String itemName;
-    private int itemChance;
-    private MultipartFile itemImage;
+  private Long seriesId;
+  private String itemName;
+  private int itemChance;
+  private MultipartFile itemImage;
 }

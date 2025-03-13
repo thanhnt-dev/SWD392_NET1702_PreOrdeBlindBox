@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Builder
 public class CartItemRequest {
-    Long blindboxSeriesId;
-    ProductType productType;
-    int quantity;
+  Long blindboxSeriesId;
+  ProductType productType;
+  int quantity;
 }
