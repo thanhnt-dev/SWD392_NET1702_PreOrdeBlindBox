@@ -8,8 +8,8 @@ import lombok.*;
 @Setter
 @Builder
 public class BlindboxAssetResponse {
-    private Long id;
-    private Long entityId;
-    private String mediaUrl;
-    private boolean isActive;
+  private Long id;
+  private Long entityId;
+  private String mediaUrl;
+  private boolean isActive;
 }

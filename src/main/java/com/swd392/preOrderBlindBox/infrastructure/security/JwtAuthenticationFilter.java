@@ -21,7 +21,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private final List<String> PUBLIC_URL = List.of("/api/v1/users/login", "/api/v1/blindbox-series", "/api/v1/blindbox-series/*");
+  private final List<String> PUBLIC_URL =
+      List.of(
+          "/api/v1/users/login",
+          "/api/v1/blindbox-series",
+          "/api/v1/blindbox-series/*",
+          "/api/v1/users/signup");
 
   private final JwtTokenService jwtTokenServices;
   private final UserService userService;

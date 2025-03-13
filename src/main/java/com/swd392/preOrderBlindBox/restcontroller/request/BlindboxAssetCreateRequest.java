@@ -11,6 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter
 @Builder
 public class BlindboxAssetCreateRequest {
-    private Long entityId;
-    private MultipartFile mediaFile;
+  private Long entityId;
+  private MultipartFile mediaFile;
 }

@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BlindboxSeriesRepository extends JpaRepository<BlindboxSeries, Long>, JpaSpecificationExecutor<BlindboxSeries> {
-}
+public interface BlindboxSeriesRepository
+    extends JpaRepository<BlindboxSeries, Long>, JpaSpecificationExecutor<BlindboxSeries> {}
