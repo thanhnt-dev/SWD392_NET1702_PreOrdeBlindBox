@@ -34,7 +34,9 @@ public class SecurityConfig {
     "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
   };
 
-  private final String[] PUBLIC_LIST = {"/api/v1/users/login", "/api/v1/blindbox", "/api/v1/blindbox/*"};
+  private final String[] PUBLIC_LIST = {
+    "/api/v1/users/login", "/api/v1/blindbox", "/api/v1/blindbox/*", "/api/v1/users/signup"
+  };
 
   @Bean
   public PasswordEncoder passwordEncoder() {

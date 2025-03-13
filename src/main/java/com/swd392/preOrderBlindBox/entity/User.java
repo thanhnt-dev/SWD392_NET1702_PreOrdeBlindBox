@@ -5,7 +5,6 @@ import com.swd392.preOrderBlindBox.common.enums.Role;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

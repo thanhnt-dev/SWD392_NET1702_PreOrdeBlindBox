@@ -16,28 +16,28 @@ import lombok.*;
 @Builder
 public class CartItem extends BaseEntity implements Serializable {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cart_id", nullable = false)
-    private Cart cart;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cart_id", nullable = false)
+  private Cart cart;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "series_id", nullable = false)
-    private BlindboxSeries series;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "series_id", nullable = false)
+  private BlindboxSeries series;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "product_type", nullable = false)
-    private ProductType productType;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "product_type", nullable = false)
+  private ProductType productType;
 
-    @Column(nullable = false, columnDefinition = "int default 1")
-    private Integer quantity = 1;
+  @Column(nullable = false, columnDefinition = "int default 1")
+  private Integer quantity = 1;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+  @Column(nullable = false, precision = 10, scale = 2)
+  private BigDecimal price;
 
-    @Column(name = "discount_percent", nullable = false, columnDefinition = "int default 0")
-    private Integer discountPercent = 0;
+  @Column(name = "discount_percent", nullable = false, columnDefinition = "int default 0")
+  private Integer discountPercent = 0;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "item_campaign_type", nullable = false)
-    private CampaignType itemCampaignType;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "item_campaign_type", nullable = false)
+  private CampaignType itemCampaignType;
 }

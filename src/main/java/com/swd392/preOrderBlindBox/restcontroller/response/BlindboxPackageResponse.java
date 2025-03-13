@@ -9,10 +9,10 @@ import lombok.*;
 @Setter
 @Builder
 public class BlindboxPackageResponse {
-    private Long id;
-    private Long seriesId;
-    private int totalUnits;
-    private int currentSoldUnits;
-    private PackageStatus status;
-    private boolean isActive;
+  private Long id;
+  private Long seriesId;
+  private int totalUnits;
+  private int currentSoldUnits;
+  private PackageStatus status;
+  private boolean isActive;
 }

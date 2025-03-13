@@ -3,7 +3,6 @@ package com.swd392.preOrderBlindBox.entity;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.Instant;
-
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 

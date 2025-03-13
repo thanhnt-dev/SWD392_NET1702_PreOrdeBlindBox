@@ -1,10 +1,9 @@
 package com.swd392.preOrderBlindBox.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
+import lombok.*;
 
 @Entity
 @Table(name = "carts")
@@ -15,11 +14,9 @@ import java.math.BigDecimal;
 @Builder
 public class Cart extends BaseEntity implements Serializable {
 
-    @OneToOne(mappedBy = "cart")
-    private User user;
+  @OneToOne(mappedBy = "cart")
+  private User user;
 
-    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalPrice;
-
-
+  @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
+  private BigDecimal totalPrice;
 }
