@@ -7,11 +7,17 @@ import com.swd392.preOrderBlindBox.entity.User;
 import com.swd392.preOrderBlindBox.infrastructure.security.SecurityUserDetails;
 import com.swd392.preOrderBlindBox.repository.repository.UserRepository;
 import com.swd392.preOrderBlindBox.restcontroller.request.RegisterRequest;
+import com.swd392.preOrderBlindBox.restcontroller.request.UserCriteria;
 import com.swd392.preOrderBlindBox.service.service.UserService;
+import com.swd392.preOrderBlindBox.specification.AccountSpecification;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -69,5 +75,37 @@ public class UserServiceImpl implements UserService {
   @Transactional
   public User createUser(User user) {
     return userRepository.save(user);
+  }
+
+  @Override
+  public User findById(Long id) {
+    return userRepository
+        .findById(id)
+        .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+  }
+
+  @Override
+  public void updateUser(User user) {
+    userRepository.save(user);
+  }
+
+  @Override
+  public Page<User> findByFilter(UserCriteria criteria, boolean admin) {
+    Pageable pageable =
+        PageRequest.of(Math.max(criteria.getCurrentPage() - 1, 0), criteria.getPageSize());
+    Specification<User> specification = AccountSpecification.baseSpecification(admin);
+
+    if (criteria.getPhone() != null) {
+      specification = specification.and(AccountSpecification.filterByPhone(criteria.getPhone()));
+    }
+
+    if (criteria.getEmail() != null) {
+      specification = specification.and(AccountSpecification.filterByEmail(criteria.getEmail()));
+    }
+    if (criteria.getSearch() != null) {
+      specification = specification.and(AccountSpecification.filterByName(criteria.getSearch()));
+    }
+
+    return userRepository.findAll(specification, pageable);
   }
 }
