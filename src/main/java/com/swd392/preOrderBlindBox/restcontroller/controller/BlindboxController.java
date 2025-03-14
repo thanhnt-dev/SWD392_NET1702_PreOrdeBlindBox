@@ -64,7 +64,7 @@ public class BlindboxController {
 
   @PostMapping()
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("hasRole('STAFF')")
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(
       summary = "Create blind box for Admin",

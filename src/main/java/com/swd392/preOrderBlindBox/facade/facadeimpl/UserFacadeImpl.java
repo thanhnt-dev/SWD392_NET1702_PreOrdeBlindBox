@@ -8,10 +8,14 @@ import com.swd392.preOrderBlindBox.facade.facade.UserFacade;
 import com.swd392.preOrderBlindBox.infrastructure.security.SecurityUserDetails;
 import com.swd392.preOrderBlindBox.restcontroller.request.LoginRequest;
 import com.swd392.preOrderBlindBox.restcontroller.request.RegisterRequest;
+import com.swd392.preOrderBlindBox.restcontroller.request.UserCriteria;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.LoginResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.PaginationResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.UserInfoResponse;
 import com.swd392.preOrderBlindBox.service.service.JwtTokenService;
 import com.swd392.preOrderBlindBox.service.service.UserService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -65,6 +69,43 @@ public class UserFacadeImpl implements UserFacade {
     SecurityContextHolder.getContext().setAuthentication(authentication);
     SecurityUserDetails userPrinciple = (SecurityUserDetails) authentication.getPrincipal();
     return BaseResponse.build(buildLoginResponse(userPrinciple, createUser), true);
+  }
+
+  @Override
+  public BaseResponse<Void> setUserAsStaff(Long id) {
+    User user = userService.findById(id);
+    user.setRoleName(Role.STAFF);
+    userService.updateUser(user);
+    return BaseResponse.ok();
+  }
+
+  @Override
+  public BaseResponse<Void> updateUserActiveStatus(Long id, boolean isActive) {
+    User user = userService.findById(id);
+    user.setActive(isActive);
+    userService.updateUser(user);
+    return BaseResponse.ok();
+  }
+
+  @Override
+  public BaseResponse<PaginationResponse<List<UserInfoResponse>>> getUserByFilter(
+      UserCriteria criteria) {
+    var users = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    boolean isAdmin = users.getRoleName().equals(Role.ADMIN);
+    var result = userService.findByFilter(criteria, isAdmin);
+    List<UserInfoResponse> responses =
+        result.getContent().stream().map(this::buildUserInfoResponse).toList();
+    return BaseResponse.build(
+        PaginationResponse.build(responses, result, criteria.getCurrentPage()), true);
+  }
+
+  private UserInfoResponse buildUserInfoResponse(User user) {
+    return UserInfoResponse.builder()
+        .id(user.getId())
+        .email(user.getEmail())
+        .phone(user.getPhone())
+        .name(user.getName())
+        .build();
   }
 
   private LoginResponse buildLoginResponse(SecurityUserDetails userDetails, User user) {
