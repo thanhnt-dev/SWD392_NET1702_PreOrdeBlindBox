@@ -13,7 +13,6 @@ import lombok.*;
 @Builder
 public class CartItemResponse {
   private Long id;
-  private Cart cart;
   private BlindboxSeriesResponse series;
   private ProductType productType;
   private int quantity;

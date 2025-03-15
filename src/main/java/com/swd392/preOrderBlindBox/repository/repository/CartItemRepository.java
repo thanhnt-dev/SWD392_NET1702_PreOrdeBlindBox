@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.repository.repository;
 
+import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import com.swd392.preOrderBlindBox.entity.CartItem;
 import java.util.List;
 import java.util.Optional;
@@ -13,4 +14,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
   Optional<CartItem> findByCartIdAndSeriesId(Long cartId, Long seriesId);
 
   void deleteByCartId(Long cartId);
+
+  Optional<CartItem> findByCartIdAndSeriesIdAndProductType(Long cartId, Long seriesId, ProductType productType);
 }

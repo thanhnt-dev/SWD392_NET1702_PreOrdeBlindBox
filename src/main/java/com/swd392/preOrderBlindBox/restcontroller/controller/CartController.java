@@ -1,8 +1,10 @@
 package com.swd392.preOrderBlindBox.restcontroller.controller;
 
+import com.swd392.preOrderBlindBox.entity.Cart;
 import com.swd392.preOrderBlindBox.entity.CartItem;
 import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.CartItemResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.CartResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
 import com.swd392.preOrderBlindBox.service.service.CartService;
@@ -11,14 +13,20 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/${api.version}/cart")
@@ -29,6 +37,8 @@ public class CartController {
   private final ModelMapper mapper;
 
   @GetMapping
+  @PreAuthorize("hasRole('USER')")
+  @SecurityRequirement(name = "Bearer Authentication")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
       summary = "Get cart of current user, or create new cart if not exist",
@@ -42,10 +52,14 @@ public class CartController {
             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
       })
   public BaseResponse<CartResponse> getUserCart() {
-    return BaseResponse.build(mapper.map(cartService.getOrCreateCart(), CartResponse.class), true);
+    CartResponse cartResponse = mapper.map(cartService.getOrCreateCart(), CartResponse.class);
+    calculateItemDiscountedPrices(cartResponse);
+    return BaseResponse.build(cartResponse, true);
   }
 
   @PostMapping
+  @PreAuthorize("hasRole('USER')")
+  @SecurityRequirement(name = "Bearer Authentication")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
       summary = "Add an item to cart",
@@ -76,12 +90,14 @@ public class CartController {
       })
   public BaseResponse<CartResponse> addItemsToCart(
       @Valid @RequestBody CartItemRequest cartItemRequest) {
-    CartItem cartItem = mapper.map(cartItemRequest, CartItem.class);
-    cartService.addToCart(cartItem);
-    return getUpdatedCartResponse();
+    CartResponse cartResponse = mapper.map(cartService.addToCart(cartItemRequest), CartResponse.class);
+    calculateItemDiscountedPrices(cartResponse);
+    return BaseResponse.build(cartResponse, true);
   }
 
   @PutMapping("/{cartItemId}")
+  @PreAuthorize("hasRole('USER')")
+  @SecurityRequirement(name = "Bearer Authentication")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
       summary = "Update quantity of an item in cart",
@@ -109,12 +125,14 @@ public class CartController {
   public BaseResponse<CartResponse> updateCartItemQuantity(
       @PathVariable @NotNull Long cartItemId,
       @RequestParam @Min(value = 1, message = "Quantity must be at least 1") int quantity) {
-
-    cartService.updateCartItemQuantity(cartItemId, quantity);
-    return getUpdatedCartResponse();
+    CartResponse cartResponse = mapper.map(cartService.updateCartItemQuantity(cartItemId, quantity), CartResponse.class);
+    calculateItemDiscountedPrices(cartResponse);
+    return BaseResponse.build(cartResponse, true);
   }
 
   @DeleteMapping("/{cartItemId}")
+  @PreAuthorize("hasRole('USER')")
+  @SecurityRequirement(name = "Bearer Authentication")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
       summary = "Remove an item from cart",
@@ -136,11 +154,14 @@ public class CartController {
             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
       })
   public BaseResponse<CartResponse> removeCartItem(@PathVariable @NotNull Long cartItemId) {
-    cartService.removeCartItem(cartItemId);
-    return getUpdatedCartResponse();
+    CartResponse cartResponse = mapper.map(cartService.removeCartItem(cartItemId), CartResponse.class);
+    calculateItemDiscountedPrices(cartResponse);
+    return BaseResponse.build(cartResponse, true);
   }
 
   @DeleteMapping
+  @PreAuthorize("hasRole('USER')")
+  @SecurityRequirement(name = "Bearer Authentication")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
       summary = "Clear all items from cart",
@@ -162,15 +183,21 @@ public class CartController {
             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
       })
   public BaseResponse<CartResponse> clearCart() {
-    CartResponse cartResponse = mapper.map(cartService.getOrCreateCart(), CartResponse.class);
-    cartService.clearCart(cartResponse.getId());
-    return getUpdatedCartResponse();
+    return BaseResponse.build(mapper.map(cartService.clearCart(), CartResponse.class), true);
   }
 
-  // Helper method to get updated cart response with total price
-  private BaseResponse<CartResponse> getUpdatedCartResponse() {
-    CartResponse cartResponse = mapper.map(cartService.getOrCreateCart(), CartResponse.class);
-    cartResponse.setTotalPrice(cartService.calculateCartTotal(cartResponse.getId()));
-    return BaseResponse.build(cartResponse, true);
+  private void calculateItemDiscountedPrices(CartResponse cart) {
+    List<CartItemResponse> cartItems = cart.getCartItems();
+    if (cartItems != null) {
+      for (CartItemResponse item : cartItems) {
+        BigDecimal price = item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO;
+        BigDecimal discountPercent = BigDecimal.valueOf(item.getDiscountPercent())
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        BigDecimal discountedPrice = price.multiply(BigDecimal.ONE.subtract(discountPercent))
+                .setScale(2, RoundingMode.HALF_UP);
+        item.setDiscountedPrice(discountedPrice);
+      }
+    }
   }
+
 }
