@@ -22,4 +22,8 @@ public interface BlindboxPackageService {
   List<Blindbox> generateBlindboxesForPackage(Long packageId);
 
   int getAvailableBlindboxQuantityOfPackageByPackageId(Long packageId);
+
+  List<BlindboxPackage> getPackagesForWholeSaleOfSeries(Long seriesId);
+
+  List<BlindboxPackage> getPackagesForSeparatedSaleOfSeries(Long seriesId);
 }

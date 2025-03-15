@@ -27,7 +27,8 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
   @Override
   public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
-    BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
+    BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
     BlindboxSeriesDetailsResponse response =
         mapper.map(blindboxSeries, BlindboxSeriesDetailsResponse.class);
 
@@ -105,7 +106,8 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   @Override
   public BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(
       Long id) {
-    BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id);
+    BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
     BlindboxSeriesManagementDetailsResponse response =
         mapper.map(blindboxSeries, BlindboxSeriesManagementDetailsResponse.class);
     List<BlindboxAsset> assets =
