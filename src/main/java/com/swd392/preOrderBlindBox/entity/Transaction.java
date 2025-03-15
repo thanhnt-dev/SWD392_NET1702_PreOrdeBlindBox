@@ -28,7 +28,7 @@ public class Transaction extends BaseEntity implements Serializable {
   @JoinColumn(name = "order_id", nullable = false)
   private Preorder preorder;
 
-  @Column(name = "transaction_code", nullable = false, unique = true, length = 20)
+  @Column(name = "transaction_code", nullable = true, unique = true, length = 100)
   private String transactionCode;
 
   @Column(name = "transaction_type", nullable = false, length = 20)

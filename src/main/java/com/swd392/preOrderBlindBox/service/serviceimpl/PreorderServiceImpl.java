@@ -1,16 +1,11 @@
 package com.swd392.preOrderBlindBox.service.serviceimpl;
 
-import com.swd392.preOrderBlindBox.common.enums.CampaignType;
-import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
-import com.swd392.preOrderBlindBox.entity.CartItem;
-import com.swd392.preOrderBlindBox.entity.Preorder;
-import com.swd392.preOrderBlindBox.entity.PreorderItem;
+import com.swd392.preOrderBlindBox.common.enums.*;
+import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
+import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.repository.repository.PreorderItemRepository;
 import com.swd392.preOrderBlindBox.repository.repository.PreorderRepository;
-import com.swd392.preOrderBlindBox.service.service.CartService;
-import com.swd392.preOrderBlindBox.service.service.PreorderCampaignService;
-import com.swd392.preOrderBlindBox.service.service.PreorderService;
-import com.swd392.preOrderBlindBox.service.service.UserService;
+import com.swd392.preOrderBlindBox.service.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +15,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @SuppressWarnings("DuplicatedCode")
 @Service
@@ -31,11 +27,12 @@ public class PreorderServiceImpl implements PreorderService {
     private final CartService cartService;
     private final PreorderCampaignService preorderCampaignService;
     private final UserService userService;
+    private final BlindboxPackageService blindboxPackageService;
+    private final BlindboxService blindboxService;
 
     @Override
     public Preorder createPreorder(Preorder preorderRequest) {
-        Long userId = userService.getCurrentUser().isPresent() ? userService.getCurrentUser().get().getId() : null;
-        List<CartItem> cartItems = cartService.getCartItems(userId);
+        List<CartItem> cartItems = cartService.getCartItems();
         List<PreorderItem> preorderItems = new ArrayList<>();
 
         for (CartItem cartItem : cartItems) {
@@ -43,12 +40,13 @@ public class PreorderServiceImpl implements PreorderService {
             preorderItems.add(preorderItem);
         }
 
+        preorderRequest.setUser(userService.getCurrentUser().orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND)));
         preorderRequest.setOrderCode(generateOrderCode());
         preorderRequest.setPreorderItems(preorderItems);
         preorderRequest.setTotalPrice(calculateFullPaymentAmount(preorderRequest.getId()));
         preorderRequest.setPreorderStatus(PreorderStatus.DEPOSIT_PENDING);
 
-        cartService.clearCart(userId);
+        cartService.clearCart();
 
         return preorderRepository.save(preorderRequest);
     }
@@ -114,8 +112,51 @@ public class PreorderServiceImpl implements PreorderService {
 
     @Override
     public void assignBlindboxProductToPreorderItem(Long preorderId) {
+        Preorder preorder = preorderRepository.findById(preorderId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
+        for (PreorderItem preorderItem : preorder.getPreorderItems()) {
+            assignProductToPreorderItem(preorderItem);
+        }
+
+        preorderRepository.save(preorder);
     }
+
+    private void assignProductToPreorderItem(PreorderItem preorderItem) {
+        List<Blindbox> blindboxesPool = getBlindboxesPool(preorderItem.getBlindboxSeries().getId());
+        List<BlindboxPackage> wholeSalePackages = blindboxPackageService.getPackagesForWholeSaleOfSeries(preorderItem.getBlindboxSeries().getId());
+
+        int quantity = preorderItem.getQuantity();
+        ProductType productType = preorderItem.getProductType();
+
+        for (int i = 0; i < quantity; i++) {
+            preorderItem.setProductId(selectProduct(productType, blindboxesPool, wholeSalePackages));
+        }
+    }
+
+    private List<Blindbox> getBlindboxesPool(Long seriesId) {
+        List<Blindbox> blindboxesPool = new ArrayList<>();
+        List<BlindboxPackage> separatedPackages = blindboxPackageService.getPackagesForSeparatedSaleOfSeries(seriesId);
+
+        for (BlindboxPackage blindboxPackage : separatedPackages) {
+            blindboxesPool.addAll(blindboxService.getUnsoldBlindboxesOfPackage(blindboxPackage.getId()));
+        }
+
+        return blindboxesPool;
+    }
+
+    private Long selectProduct(ProductType productType, List<Blindbox> blindboxes, List<BlindboxPackage> wholeSalePackages) {
+        Random random = new Random();
+
+        if (productType == ProductType.BOX && !blindboxes.isEmpty()) {
+            return blindboxes.get(random.nextInt(blindboxes.size())).getId();
+        } else if (productType == ProductType.PACKAGE && !wholeSalePackages.isEmpty()) {
+            return wholeSalePackages.get(random.nextInt(wholeSalePackages.size())).getId();
+        }
+
+        throw new IllegalStateException("No available product to assign for " + productType);
+    }
+
 
     private String generateOrderCode() {
         String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

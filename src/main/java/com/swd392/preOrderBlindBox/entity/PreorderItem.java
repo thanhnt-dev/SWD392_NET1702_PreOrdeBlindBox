@@ -28,7 +28,7 @@ public class PreorderItem extends BaseEntity implements Serializable {
   private BlindboxSeries blindboxSeries;
 
   @Column(name = "product_id")
-  private Integer productId;
+  private Long productId;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "product_type", nullable = false)

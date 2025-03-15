@@ -18,16 +18,16 @@ public class PaymentService {
     public BaseResponse<PaymentResponse> createVnPayPayment(HttpServletRequest request) {
         long amount = Integer.parseInt(request.getParameter("amount")) * 100L;
         String bankCode = request.getParameter("bankCode");
-        String auctionId = request.getParameter("auctionId");
+        String preorderId = request.getParameter("preorderId");
         String username = request.getParameter("username");
         String transactionId = request.getParameter("transactionId");
         Map<String, String> vnpParamsMap;
 
         if (transactionId != null) {
             int id = Integer.parseInt(transactionId);
-            vnpParamsMap = vnPayConfig.getVNPayConfig(auctionId, username, id);
+            vnpParamsMap = vnPayConfig.getVNPayConfig(preorderId, username, id);
         } else {
-            vnpParamsMap = vnPayConfig.getVNPayConfig(auctionId, username, 0);
+            vnpParamsMap = vnPayConfig.getVNPayConfig(preorderId, username, 0);
         }
         vnpParamsMap.put("vnp_Amount", String.valueOf(amount));
         if (bankCode != null && !bankCode.isEmpty()) {

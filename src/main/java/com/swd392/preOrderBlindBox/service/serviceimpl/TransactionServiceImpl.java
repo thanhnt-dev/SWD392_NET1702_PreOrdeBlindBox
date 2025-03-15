@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.List;
+import java.util.Optional;
 
 @SuppressWarnings("DuplicatedCode")
 @Service
@@ -32,7 +34,6 @@ public class TransactionServiceImpl implements TransactionService {
                 .preorder(preorder)
                 .isDeposit(isDeposit)
                 .transactionAmount(amount)
-                .transactionCode(generateTransactionCode())
                 .transactionType(transactionType)
                 .user(userService.getCurrentUser().orElse(null))
                 .transactionStatus(TransactionStatus.PENDING)
@@ -56,20 +57,27 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findByPreorderId(preorderId);
     }
 
-    private String generateTransactionCode() {
-        String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder code = new StringBuilder();
-
-        code.append("TX");
-
-        String timestamp = String.valueOf(System.currentTimeMillis());
-        code.append(timestamp.substring(Math.max(0, timestamp.length() - 8)));
-
-        java.util.Random random = new java.util.Random();
-        while (code.length() < 20) {
-            code.append(alphanumeric.charAt(random.nextInt(alphanumeric.length())));
-        }
-
-        return code.toString();
+    @Override
+    public Optional<Transaction> getTransactionById(Long id) {
+        return transactionRepository.findById(id);
     }
+
+
+
+//    private String generateTransactionCode() {
+//        String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//        StringBuilder code = new StringBuilder();
+//
+//        code.append("TX");
+//
+//        String timestamp = String.valueOf(System.currentTimeMillis());
+//        code.append(timestamp.substring(Math.max(0, timestamp.length() - 8)));
+//
+//        SecureRandom random = new SecureRandom();
+//        while (code.length() < 20) {
+//            code.append(alphanumeric.charAt(random.nextInt(alphanumeric.length())));
+//        }
+//
+//        return code.toString();
+//    }
 }

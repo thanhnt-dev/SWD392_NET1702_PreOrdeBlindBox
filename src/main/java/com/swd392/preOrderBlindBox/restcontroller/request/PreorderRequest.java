@@ -1,4 +1,4 @@
-package com.swd392.preOrderBlindBox.restcontroller.response;
+package com.swd392.preOrderBlindBox.restcontroller.request;
 
 import lombok.*;
 

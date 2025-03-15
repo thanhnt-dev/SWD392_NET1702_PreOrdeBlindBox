@@ -73,9 +73,13 @@ public class RestExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ResponseEntity<BaseResponse<ExceptionResponse>> handleGenericException(Exception ex) {
-    return buildErrorResponse(
-        "SERVER_ERROR", "An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+  public ResponseEntity<BaseResponse<?>> handleGenericException(Exception ex) {
+    // Log the full stack trace
+    ex.printStackTrace();
+    System.out.println("Unexpected error: " + ex.getMessage());
+
+    var errorResponse = BaseResponse.build(null, false);
+    return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
   private ResponseEntity<BaseResponse<ExceptionResponse>> buildErrorResponse(
