@@ -31,12 +31,10 @@ public class SecurityConfig {
   }
 
   private final String[] WHITE_LIST = {
-    "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
+          "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
   };
 
-  private final String[] PUBLIC_LIST = {
-    "/api/v1/users/login", "/api/v1/blindbox", "/api/v1/blindbox/*", "/api/v1/users/signup"
-  };
+  private final String[] PUBLIC_LIST = {"/api/v1/users/login", "/api/v1/blindbox", "/api/v1/blindbox/*"};
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -53,7 +51,7 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationManager authenticationManager(
-      AuthenticationConfiguration authenticationConfiguration) throws Exception {
+          AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
   }
 
@@ -65,26 +63,26 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
-        .cors(AbstractHttpConfigurer::disable)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            request ->
-                request
-                    .requestMatchers(WHITE_LIST)
-                    .permitAll()
-                    .requestMatchers(PUBLIC_LIST)
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated());
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .formLogin(AbstractHttpConfigurer::disable)
+            .sessionManagement(
+                    session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(
+                    request ->
+                            request
+                                    .requestMatchers(WHITE_LIST)
+                                    .permitAll()
+                                    .requestMatchers(PUBLIC_LIST)
+                                    .permitAll()
+                                    .anyRequest()
+                                    .authenticated());
     http.authenticationProvider(authenticationProvider());
     http.addFilterBefore(authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
 
   @Bean
-  public CorsFilter corsFilter() {
+  public UrlBasedCorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration corsConfig = new CorsConfiguration();
     corsConfig.addAllowedOrigin("http://localhost:5173");
     corsConfig.addAllowedOrigin("https://preorder-blindbox.vercel.app");
@@ -94,7 +92,6 @@ public class SecurityConfig {
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", corsConfig);
-
-    return new CorsFilter(source);
+    return source;
   }
 }
