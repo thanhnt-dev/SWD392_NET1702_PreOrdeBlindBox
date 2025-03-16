@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.CampaignType;
 import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
 import com.swd392.preOrderBlindBox.common.enums.TransactionStatus;
 import com.swd392.preOrderBlindBox.common.enums.TransactionType;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -30,12 +33,14 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
     private final PaymentService paymentService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Preorder createPreorder(PreorderRequest preorderRequest) {
         Preorder preorder = modelMapper.map(preorderRequest, Preorder.class);
         return preorderService.createPreorder(preorder);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String initiatePayment(Long preorderId, TransactionType transactionType, boolean isDeposit) {
         Optional<Preorder> preorderOptional = preorderService.getPreorderById(preorderId);
         if (preorderOptional.isEmpty()) {
@@ -65,6 +70,7 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String finalizePayment(Long transactionId, String transactionCode, Long preorderId, boolean success) {
         // Retrieve transaction and preorder
         Transaction transaction = transactionService.getTransactionById(transactionId)
@@ -85,6 +91,12 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
 
     @Override
     public BaseResponse<PaymentResponse> createVnPayPaymentRequest(HttpServletRequest request) {
+        String preorderId = request.getParameter("preorderId");
+        String transactionId = request.getParameter("transactionId");
+        if (preorderId == null || transactionId == null) {
+            throw new IllegalArgumentException("Preorder ID not found");
+        }
+
         return paymentService.createVnPayPayment(request);
     }
 
@@ -93,12 +105,12 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
         transactionService.updateTransactionStatus(transaction.getId(), TransactionStatus.SUCCESS);
         preorderService.updatePreorderStatus(preorder.getId(), PreorderStatus.FULL_PAYMENT_SUCCESSFUL);
 
-        // Assign blindbox products to preorder items
+        // Assign products to preorder items
         preorderService.assignBlindboxProductToPreorderItem(preorder.getId());
 
-        // Increment campaign units for each preorder item
-        for (PreorderItem preorderItem : preorder.getPreorderItems()) {
-            incrementCampaignUnits(preorderItem);
+        // Handle campaign increments if applicable
+        if (hasCampaignItems(preorder)) {
+            incrementCampaignUnits(preorder);
         }
 
         return "?paymentStatus=success";
@@ -111,12 +123,38 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
         return "?paymentStatus=failed";
     }
 
-    //Increments the units count in the corresponding campaign
-    private void incrementCampaignUnits(PreorderItem preorderItem) {
-        PreorderCampaign campaign = preorderCampaignService.getOngoingCampaignOfBlindboxSeries(preorderItem.getBlindboxSeries().getId())
-                .orElseThrow(() -> new IllegalArgumentException("No active campaign found for this series"));
+    private boolean hasCampaignItems(Preorder preorder) {
+        return preorder.getPreorderItems().stream()
+                .anyMatch(item -> item.getItemFromCampaignType() != null);
+    }
 
-        preorderCampaignService.incrementUnitsCount(campaign.getId(), preorderItem.getQuantity());
+    //Increments the units count in the corresponding campaign
+    private void incrementCampaignUnits(Preorder preorder) {
+        Map<Long, Boolean> processedCampaigns = new HashMap<>(); // Track GROUP campaigns processed
+
+        for (PreorderItem preorderItem : preorder.getPreorderItems()) {
+            CampaignType campaignType = preorderItem.getItemFromCampaignType();
+            if (campaignType == null) {
+                continue; // Skip non-campaign items
+            }
+
+            PreorderCampaign ongoingCampaign = preorderCampaignService
+                    .getOngoingCampaignOfBlindboxSeries(preorderItem.getBlindboxSeries().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("No ongoing campaign found"));
+
+            if (campaignType == CampaignType.MILESTONE) {
+                // Handle MILESTONE campaign (increment by item quantity)
+                preorderCampaignService.incrementUnitsCount(ongoingCampaign.getId(), preorderItem.getQuantity());
+
+            } else if (campaignType == CampaignType.GROUP) {
+                // Handle GROUP campaign (increment only once per preorder)
+                // Ensure the campaign is counted only once per preorder
+                if (!processedCampaigns.containsKey(ongoingCampaign.getId())) {
+                    preorderCampaignService.incrementUnitsCount(ongoingCampaign.getId(), 1);
+                    processedCampaigns.put(ongoingCampaign.getId(), true);
+                }
+            }
+        }
     }
 
 }

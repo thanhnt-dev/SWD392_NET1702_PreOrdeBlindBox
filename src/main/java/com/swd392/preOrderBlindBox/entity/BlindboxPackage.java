@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.swd392.preOrderBlindBox.common.enums.PackageStatus;
 import jakarta.persistence.*;
 import java.io.Serializable;

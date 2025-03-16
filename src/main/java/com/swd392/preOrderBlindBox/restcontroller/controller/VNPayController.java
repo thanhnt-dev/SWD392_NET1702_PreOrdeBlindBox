@@ -3,9 +3,15 @@ package com.swd392.preOrderBlindBox.restcontroller.controller;
 import com.swd392.preOrderBlindBox.common.enums.TransactionStatus;
 import com.swd392.preOrderBlindBox.facade.facade.CheckoutFacade;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PaymentResponse;
 import com.swd392.preOrderBlindBox.service.service.PaymentService;
 import com.swd392.preOrderBlindBox.service.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +32,35 @@ public class VNPayController {
     private String frontendBaseUrl;
 
     @GetMapping("/vn-pay")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Initiate payment process",
+            tags = {"Payment APIs"})
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Payment process initiated"),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+            })
     public BaseResponse<PaymentResponse> pay(HttpServletRequest request) {
         return checkoutFacade.createVnPayPaymentRequest(request);
     }
 
     @GetMapping("/vn-pay-callback")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Internal server-to-server callback handler for VNPay",
+            tags = {"Payment APIs"})
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Payment callback handled"),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+            })
     public void payCallbackHandler(
             HttpServletRequest request,
             HttpServletResponse response,
