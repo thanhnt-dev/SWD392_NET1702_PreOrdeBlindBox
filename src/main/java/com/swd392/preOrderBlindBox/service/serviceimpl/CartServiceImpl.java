@@ -1,19 +1,23 @@
 package com.swd392.preOrderBlindBox.service.serviceimpl;
 
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
+import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.repository.repository.CartItemRepository;
 import com.swd392.preOrderBlindBox.repository.repository.CartRepository;
+import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
 import com.swd392.preOrderBlindBox.service.service.BlindboxSeriesService;
 import com.swd392.preOrderBlindBox.service.service.CartService;
 import com.swd392.preOrderBlindBox.service.service.PreorderCampaignService;
 import com.swd392.preOrderBlindBox.service.service.UserService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +29,9 @@ public class CartServiceImpl implements CartService {
   private final UserService userService;
   private final BlindboxSeriesService blindboxSeriesService;
   private final PreorderCampaignService preorderCampaignService;
+  private final ModelMapper modelMapper;
 
   @Override
-  @Transactional
   public Cart getOrCreateCart() {
     User currentUser =
         userService
@@ -40,128 +44,176 @@ public class CartServiceImpl implements CartService {
             () -> {
               Cart newCart = new Cart();
               newCart.setUser(currentUser);
+              newCart.setTotalPrice(BigDecimal.ZERO);
               return cartRepository.save(newCart);
             });
   }
 
   @Override
-  public List<CartItem> getCartItems(Long cartId) {
-    return cartItemRepository.findByCartId(cartId);
+  public List<CartItem> getCartItems() {
+    Cart cart = getOrCreateCart();
+    return cartItemRepository.findByCartId(cart.getId());
   }
 
   @Override
   @Transactional
-  public CartItem addToCart(CartItem cartItem) {
+  public Cart addToCart(CartItemRequest cartItemRequest) {
     Cart cart = getOrCreateCart();
-    cartItem.setCart(cart);
+    CartItem cartItem = createCartItemFromRequest(cartItemRequest, cart);
 
-    CartItem existingItem =
-        cartItemRepository
-            .findByCartIdAndSeriesId(cart.getId(), cartItem.getSeries().getId())
-            .orElse(null);
-    PreorderCampaign ongoingCampaign =
-        preorderCampaignService
-            .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
-            .orElse(null);
-
+    applyCampaignDiscount(cartItem);
     validateProductAvailability(cartItem);
 
-    if (ongoingCampaign != null) {
-      validateDiscountedUnitsAvailability(cartItem);
-      cartItem.setDiscountPercent(
-          preorderCampaignService.getDiscountOfActiveTierOfOnGoingCampaign(
-              ongoingCampaign.getId()));
-    }
+    updateOrSaveCartItem(cartItem, cart);
 
-    if (existingItem != null) {
-      int newQuantity = existingItem.getQuantity() + cartItem.getQuantity();
-      if (newQuantity <= 0) {
-        cartItemRepository.delete(existingItem);
-        return null;
-      }
-      existingItem.setQuantity(newQuantity);
-      return cartItemRepository.save(existingItem);
-    }
-
-    return cartItem.getQuantity() > 0 ? cartItemRepository.save(cartItem) : null;
+    return updateCartTotal(cart);
   }
 
   @Override
   @Transactional
-  public CartItem updateCartItemQuantity(Long cartItemId, int quantity) {
+  public Cart updateCartItemQuantity(Long cartItemId, int quantity) {
     if (quantity <= 0) {
       throw new IllegalArgumentException("Quantity must be greater than zero");
     }
 
+    Cart cart = getOrCreateCart();
+
     CartItem cartItem =
         cartItemRepository
             .findById(cartItemId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
-    verifyCartOwnership(cartItem);
-
-    cartItem.setQuantity(quantity);
-    return cartItemRepository.save(cartItem);
-  }
-
-  @Override
-  @Transactional
-  public void removeCartItem(Long cartItemId) {
-    CartItem cartItem =
-        cartItemRepository
-            .findById(cartItemId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
-
-    verifyCartOwnership(cartItem);
-
-    cartItemRepository.deleteById(cartItemId);
-  }
-
-  @Override
-  @Transactional
-  public void clearCart(Long cartId) {
-    Cart cart =
-        cartRepository
-            .findById(cartId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
-
-    Optional<User> currentUser = userService.getCurrentUser();
-    if (currentUser.isPresent()
-        && (cart.getUser() == null || !cart.getUser().getId().equals(currentUser.get().getId()))) {
-      throw new SecurityException("Cannot clear cart that doesn't belong to current user");
+    verifyCartItemOwnership(cartItem);
+    validateProductAvailability(cartItem, quantity);
+    if (cartItem.getItemCampaignType() != null) {
+      validateDiscountedUnitsAvailability(cartItem, quantity);
     }
 
-    cartItemRepository.deleteByCartId(cartId);
+    cartItem.setQuantity(quantity);
+    cartItemRepository.save(cartItem);
+
+    return updateCartTotal(cart);
   }
 
   @Override
-  public BigDecimal calculateCartTotal(Long cartId) {
-    Cart cart =
-        cartRepository
-            .findById(cartId)
+  @Transactional
+  public Cart removeCartItem(Long cartItemId) {
+    Cart cart = getOrCreateCart();
+    CartItem cartItem = cartItemRepository.findById(cartItemId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
-    verifyCartOwnership(cart);
+    verifyCartItemOwnership(cartItem);
 
-    List<CartItem> cartItems = getCartItems(cartId);
+    cart.getCartItems().remove(cartItem);
 
-    return cartItems.stream()
-        .map(
-            item -> {
-              BigDecimal price = item.getPrice();
-              int quantity = item.getQuantity();
-              BigDecimal discount =
-                  BigDecimal.valueOf(item.getDiscountPercent())
-                      .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-              return price
-                  .multiply(BigDecimal.valueOf(quantity))
-                  .multiply(BigDecimal.ONE.subtract(discount));
-            })
-        .reduce(BigDecimal.ZERO, BigDecimal::add)
-        .setScale(2, RoundingMode.HALF_UP);
+    return updateCartTotal(cart);
   }
 
-  private void verifyCartOwnership(CartItem cartItem) {
+  @Override
+  @Transactional
+  public Cart clearCart() {
+    Cart cart = getOrCreateCart();
+
+    if (cart.getCartItems() != null) {
+      cart.getCartItems().clear();
+    } else {
+      cart.setCartItems(new ArrayList<>());
+    }
+
+    return updateCartTotal(cart);
+  }
+
+  @Override
+  public BigDecimal calculateCartTotal() {
+    Cart cart = getOrCreateCart();
+    verifyCartOwnership(cart);
+    List<CartItem> cartItems = getCartItems();
+
+    return cartItems.stream()
+            .map(this::calculateItemTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add)
+            .setScale(2, RoundingMode.HALF_UP);
+  }
+
+  private BigDecimal calculateItemTotal(CartItem item) {
+    BigDecimal discountedPrice = calculateItemDiscountedPrice(item);
+    return discountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+  }
+
+  private BigDecimal calculateItemDiscountedPrice(CartItem item) {
+    BigDecimal price = item.getPrice();
+    BigDecimal discountPercent = BigDecimal.valueOf(item.getDiscountPercent())
+            .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    return price.multiply(BigDecimal.ONE.subtract(discountPercent));
+  }
+
+  private CartItem createCartItemFromRequest(CartItemRequest cartItemRequest, Cart cart) {
+    CartItem cartItem = modelMapper.map(cartItemRequest, CartItem.class);
+    BlindboxSeries series = blindboxSeriesService.getBlindboxSeriesById(cartItemRequest.getBlindboxSeriesId())
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+    cartItem.setSeries(series);
+    if (cartItem.getProductType() == null) {
+      throw new IllegalArgumentException("Product type is required");
+    }
+    BigDecimal price = cartItem.getProductType() == ProductType.PACKAGE ? series.getPackagePrice() : series.getBoxPrice();
+    if (price == null) {
+      throw new IllegalStateException("Price for series ID " + series.getId() + " is null");
+    }
+    cartItem.setPrice(price);
+    cartItem.setCart(cart);
+    cartItem.setItemCampaignType(preorderCampaignService.getOngoingCampaignOfBlindboxSeries(cartItemRequest
+                    .getBlindboxSeriesId())
+            .map(PreorderCampaign::getCampaignType)
+            .orElse(null));
+    return cartItem;
+  }
+
+  private void applyCampaignDiscount(CartItem cartItem) {
+    PreorderCampaign ongoingCampaign = preorderCampaignService
+            .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
+            .orElse(null);
+    if (ongoingCampaign != null && cartItem.getItemCampaignType() != null) {
+      validateDiscountedUnitsAvailability(cartItem);
+      cartItem.setDiscountPercent(
+              preorderCampaignService.getDiscountOfActiveTierOfOnGoingCampaign(ongoingCampaign.getId()));
+    }
+  }
+
+  private void updateOrSaveCartItem(CartItem cartItem, Cart cart) {
+    // Find existing item by cartId, seriesId, and productType
+    CartItem existingItem = cartItemRepository
+            .findByCartIdAndSeriesIdAndProductType(
+                    cart.getId(),
+                    cartItem.getSeries().getId(),
+                    cartItem.getProductType()
+            )
+            .orElse(null);
+
+    if (existingItem != null) {
+      // Same productType: update quantity
+      int newQuantity = existingItem.getQuantity() + cartItem.getQuantity();
+      if (newQuantity <= 0) {
+        cartItemRepository.delete(existingItem);
+        cart.getCartItems().remove(existingItem); // Sync in-memory collection
+      } else {
+        existingItem.setQuantity(newQuantity);
+        existingItem.setPrice(cartItem.getPrice()); // Update price if changed
+        cartItemRepository.save(existingItem);
+      }
+    } else if (cartItem.getQuantity() > 0) {
+      // Different productType or no existing item: add as new
+      cartItem.setCart(cart); // Ensure cart reference is set
+      cart.getCartItems().add(cartItem); // Add to in-memory collection
+      cartItemRepository.save(cartItem);
+    }
+  }
+
+  private Cart updateCartTotal(Cart cart) {
+    cart.setTotalPrice(calculateCartTotal());
+    return cartRepository.save(cart);
+  }
+
+  private void verifyCartItemOwnership(CartItem cartItem) {
     if (cartItem == null || cartItem.getCart() == null) {
       throw new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND);
     }
@@ -196,6 +248,25 @@ public class CartServiceImpl implements CartService {
     }
   }
 
+  private void validateProductAvailability(CartItem cartItem, int quantity) {
+    switch (cartItem.getProductType()) {
+      case PACKAGE:
+        if (blindboxSeriesService.getAvailablePackageQuantityOfSeries(cartItem.getSeries().getId())
+                < quantity) {
+          throw new IllegalArgumentException("Not enough package units available");
+        }
+        break;
+      case BOX:
+        if (blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(cartItem.getSeries().getId())
+                < quantity) {
+          throw new IllegalArgumentException("Not enough box units available");
+        }
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid product type");
+    }
+  }
+
   private void validateDiscountedUnitsAvailability(CartItem cartItem) {
     PreorderCampaign activeCampaign =
         preorderCampaignService
@@ -204,13 +275,36 @@ public class CartServiceImpl implements CartService {
 
     switch (cartItem.getItemCampaignType()) {
       case GROUP:
-        break;
+        case null:
+            break;
       case MILESTONE:
-        validateProductAvailability(cartItem);
         int availableDiscountedUnits =
             preorderCampaignService.getCurrentUnitsCountOfActiveTierOfOngoingCampaign(
                 activeCampaign.getId());
         if (cartItem.getQuantity() > availableDiscountedUnits) {
+          throw new IllegalArgumentException("Not enough discounted units available");
+        }
+        break;
+        default:
+        throw new IllegalArgumentException("Invalid item campaign type");
+    }
+  }
+
+  private void validateDiscountedUnitsAvailability(CartItem cartItem, int quantity) {
+    PreorderCampaign activeCampaign =
+            preorderCampaignService
+                    .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("No active campaign found"));
+
+    switch (cartItem.getItemCampaignType()) {
+      case GROUP:
+      case null:
+        break;
+      case MILESTONE:
+        int availableDiscountedUnits =
+                preorderCampaignService.getCurrentUnitsCountOfActiveTierOfOngoingCampaign(
+                        activeCampaign.getId());
+        if (availableDiscountedUnits < quantity) {
           throw new IllegalArgumentException("Not enough discounted units available");
         }
         break;

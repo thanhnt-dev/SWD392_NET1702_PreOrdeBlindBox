@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
 import jakarta.persistence.*;
 import java.io.Serializable;
@@ -38,7 +39,8 @@ public class Preorder extends BaseEntity implements Serializable {
   @Column(name = "total_price", precision = 10, scale = 2)
   private BigDecimal totalPrice;
 
-  @OneToMany(mappedBy = "preorder")
+  @OneToMany(mappedBy = "preorder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @JsonManagedReference
   private List<PreorderItem> preorderItems;
 
   @OneToMany(mappedBy = "preorder")

@@ -11,4 +11,6 @@ public interface BlindboxService {
   void updateBlindboxStatus(Long id, Boolean isSold);
 
   void updateRevealedItem(Long blindboxId, Long itemId);
+
+  List<Blindbox> getUnsoldBlindboxesOfPackage(Long packageId);
 }

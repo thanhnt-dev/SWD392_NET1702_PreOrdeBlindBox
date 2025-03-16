@@ -90,6 +90,13 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
     return findActiveTier(campaignId).map(CampaignTier::getDiscountPercent).orElse(0);
   }
 
+  @Override
+  public void incrementUnitsCount(Long campaignId, int unitsCount) {
+    CampaignTier activeTier = findActiveTier(campaignId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+    activeTier.setCurrentCount(activeTier.getCurrentCount() + unitsCount);
+  }
+
   private void validateOngoingCampaign(Long campaignId) {
     PreorderCampaign campaign =
         preorderCampaignRepository

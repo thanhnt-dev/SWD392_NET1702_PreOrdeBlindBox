@@ -1,10 +1,15 @@
 package com.swd392.preOrderBlindBox.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.swd392.preOrderBlindBox.common.enums.CampaignType;
 import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.*;
 
 @Entity
@@ -15,12 +20,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PreorderItem extends BaseEntity implements Serializable {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "preorder_id", nullable = false)
+  @JsonBackReference
   private Preorder preorder;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -28,7 +30,7 @@ public class PreorderItem extends BaseEntity implements Serializable {
   private BlindboxSeries blindboxSeries;
 
   @Column(name = "product_id")
-  private Integer productId;
+  private String productIds;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "product_type", nullable = false)
@@ -46,4 +48,5 @@ public class PreorderItem extends BaseEntity implements Serializable {
   @Enumerated(EnumType.STRING)
   @Column(name = "item_from_campaign_type")
   private CampaignType itemFromCampaignType;
+
 }

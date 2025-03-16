@@ -84,4 +84,18 @@ public class BlindboxPackageServiceImpl implements BlindboxPackageService {
             .filter(blindbox -> !blindbox.getIsSold())
             .count();
   }
+
+  @Override
+  public List<BlindboxPackage> getPackagesForWholeSaleOfSeries(Long seriesId) {
+      return blindboxPackageRepository.findBySeriesId(seriesId).stream()
+              .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)
+              .toList();
+  }
+
+  @Override
+  public List<BlindboxPackage> getPackagesForSeparatedSaleOfSeries(Long seriesId) {
+    return blindboxPackageRepository.findBySeriesId(seriesId).stream()
+            .filter(pkg -> pkg.getStatus() == PackageStatus.UNPACKED)
+            .toList();
+  }
 }

@@ -35,7 +35,8 @@ public class CampaignFacadeImpl implements CampaignFacade {
   @Transactional
   public BaseResponse<Void> createCampaignTier(PreorderCampaignRequest request) {
     BlindboxSeries blindboxSeries =
-        blindboxSeriesService.getBlindboxSeriesById(request.getBlindboxSeriesId());
+        blindboxSeriesService.getBlindboxSeriesById(request.getBlindboxSeriesId())
+                .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
     PreorderCampaign preorderCampaign =
         PreorderCampaign.builder()
             .campaignType(request.getCampaignType())

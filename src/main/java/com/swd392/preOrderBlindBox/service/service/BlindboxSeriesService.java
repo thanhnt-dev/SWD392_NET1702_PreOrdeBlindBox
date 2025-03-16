@@ -2,6 +2,8 @@ package com.swd392.preOrderBlindBox.service.service;
 
 import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -9,7 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 public interface BlindboxSeriesService {
   List<BlindboxSeries> getAllBlindboxSeries();
 
-  BlindboxSeries getBlindboxSeriesById(Long id);
+  Optional<BlindboxSeries> getBlindboxSeriesById(Long id);
 
   List<BlindboxSeries> getActiveBlindboxSeries();
 

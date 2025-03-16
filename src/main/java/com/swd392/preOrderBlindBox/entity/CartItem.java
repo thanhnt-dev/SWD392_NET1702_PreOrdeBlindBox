@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.swd392.preOrderBlindBox.common.enums.CampaignType;
 import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import jakarta.persistence.*;
@@ -18,6 +19,7 @@ public class CartItem extends BaseEntity implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "cart_id", nullable = false)
+  @JsonBackReference
   private Cart cart;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -38,6 +40,6 @@ public class CartItem extends BaseEntity implements Serializable {
   private Integer discountPercent = 0;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "item_campaign_type", nullable = false)
+  @Column(name = "item_campaign_type", nullable = true)
   private CampaignType itemCampaignType;
 }

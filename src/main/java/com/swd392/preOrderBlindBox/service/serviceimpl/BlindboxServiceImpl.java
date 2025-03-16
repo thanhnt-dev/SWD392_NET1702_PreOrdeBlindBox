@@ -6,6 +6,8 @@ import com.swd392.preOrderBlindBox.entity.Blindbox;
 import com.swd392.preOrderBlindBox.repository.repository.BlindboxRepository;
 import com.swd392.preOrderBlindBox.service.service.BlindboxService;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -40,5 +42,10 @@ public class BlindboxServiceImpl implements BlindboxService {
   @Override
   public void updateRevealedItem(Long blindboxId, Long itemId) {
     throw new UnsupportedOperationException("Not implemented yet");
+  }
+
+  @Override
+  public List<Blindbox> getUnsoldBlindboxesOfPackage(Long packageId) {
+    return blindboxRepository.findByBlindboxPackageId(packageId).stream().filter(blindbox -> !blindbox.getIsSold()).collect(Collectors.toList());
   }
 }
