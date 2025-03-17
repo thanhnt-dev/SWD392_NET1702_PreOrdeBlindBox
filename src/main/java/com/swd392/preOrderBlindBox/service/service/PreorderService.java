@@ -2,8 +2,11 @@ package com.swd392.preOrderBlindBox.service.service;
 
 import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
 import com.swd392.preOrderBlindBox.entity.Preorder;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderDetailsResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreordersHistoryResponse;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface PreorderService {
@@ -22,4 +25,8 @@ public interface PreorderService {
     void assignBlindboxProductToPreorderItem(Long preorderId);
 
     void updatePreorder(Preorder preorder);
+
+    List<PreordersHistoryResponse> getPreordersOfUser();
+
+    PreorderDetailsResponse getPreorderDetails(Long preorderId);
 }

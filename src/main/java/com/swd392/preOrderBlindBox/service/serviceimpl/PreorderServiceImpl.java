@@ -6,20 +6,21 @@ import com.swd392.preOrderBlindBox.common.util.Util;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.repository.repository.PreorderItemRepository;
 import com.swd392.preOrderBlindBox.repository.repository.PreorderRepository;
-import com.swd392.preOrderBlindBox.restcontroller.response.PreorderItemEstimateResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.*;
 import com.swd392.preOrderBlindBox.service.service.*;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("DuplicatedCode")
 @Service
@@ -32,6 +33,7 @@ public class PreorderServiceImpl implements PreorderService {
     private final UserService userService;
     private final BlindboxPackageService blindboxPackageService;
     private final BlindboxService blindboxService;
+    private final ModelMapper modelMapper;
     @Value("${deposit.rate:0.5}")
     private BigDecimal depositRate;
 
@@ -183,6 +185,101 @@ public class PreorderServiceImpl implements PreorderService {
         }
 
         preorderRepository.save(existingPreorder);
+    }
+
+    @Override
+    public List<PreordersHistoryResponse> getPreordersOfUser() {
+        User user = userService.getCurrentUser()
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND));
+
+        return preorderRepository.findByUserId(user.getId()).stream()
+                .map(this::toPreordersHistoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PreordersHistoryResponse toPreordersHistoryResponse(Preorder preorder) {
+        PreordersHistoryResponse response = modelMapper.map(preorder, PreordersHistoryResponse.class);
+        return response;
+    }
+
+    @Override
+    public PreorderDetailsResponse getPreorderDetails(Long preorderId) {
+        Preorder preorder = preorderRepository.findById(preorderId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+        PreorderDetailsResponse response = modelMapper.map(preorder, PreorderDetailsResponse.class);
+        response.setUsername(preorder.getUser().getEmail());
+        response.setPayments(buildPaymentSummaries(preorder));
+        response.setItems(buildPreorderItems(preorder.getPreorderItems()));
+        response.setCreatedAt(Util.convertTimestampToLocalDateTime(preorder.getCreatedAt()));
+
+        return response;
+    }
+
+    private List<PaymentSummaryResponse> buildPaymentSummaries(Preorder preorder) {
+        return preorder.getTransactions().stream()
+                .map(this::toPaymentSummaryResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PaymentSummaryResponse toPaymentSummaryResponse(Transaction transaction) {
+        PaymentSummaryResponse response = new PaymentSummaryResponse();
+        response.setAmount(transaction.getTransactionAmount());
+        response.setDeposit(transaction.getIsDeposit());
+        response.setIssuedAt(Util.convertTimestampToLocalDateTime(transaction.getCreatedAt()));
+        response.setStatus(transaction.getTransactionStatus());
+        return response;
+    }
+
+    private List<PreorderItemResponse> buildPreorderItems(List<PreorderItem> preorderItems) {
+        return preorderItems.stream()
+                .map(this::toPreorderItemResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PreorderItemResponse toPreorderItemResponse(PreorderItem preorderItem) {
+        PreorderItemResponse response = modelMapper.map(preorderItem, PreorderItemResponse.class);
+        response.setProducts(buildProductResponses(preorderItem));
+        return response;
+    }
+
+    private List<PreorderItemProductResponse> buildProductResponses(PreorderItem preorderItem) {
+        List<Long> productIds = parseProductIds(preorderItem.getProductIds());
+        return productIds.stream()
+                .map(productId -> toPreorderItemProductResponse(productId, preorderItem))
+                .collect(Collectors.toList());
+    }
+
+    private PreorderItemProductResponse toPreorderItemProductResponse(Long productId, PreorderItem preorderItem) {
+        PreorderItemProductResponse response = new PreorderItemProductResponse();
+        response.setId(productId);
+        response.setSeriesId(preorderItem.getBlindboxSeries().getId());
+        response.setAlias(generateProductAlias(productId, preorderItem));
+        return response;
+    }
+
+    private List<Long> parseProductIds(String productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            return Arrays.stream(productIds.split(","))
+                    .map(Long::valueOf)
+                    .collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException("Invalid product_ids format: " + productIds, e);
+        }
+    }
+
+    private String generateProductAlias(Long productId, PreorderItem preorderItem) {
+        ProductType type = preorderItem.getProductType();
+        if (type == ProductType.BOX) {
+            Blindbox blindbox = blindboxService.getBlindboxById(productId);
+            return "Blindbox #" + productId + " of Package #" + blindbox.getBlindboxPackage().getId();
+        } else if (type == ProductType.PACKAGE) {
+            return "Package #" + productId;
+        }
+        return null;
     }
 
     private void assignProductsToPreorderItem(PreorderItem preorderItem) {

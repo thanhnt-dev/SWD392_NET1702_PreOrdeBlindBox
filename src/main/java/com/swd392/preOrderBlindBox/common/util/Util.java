@@ -2,26 +2,22 @@ package com.swd392.preOrderBlindBox.common.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 public class Util {
     private static final int SCALE = 2;
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
-    public static List<Long> getProductIdsAsList(String productIds) {
-        if (productIds == null || productIds.isEmpty()) {
-            return new ArrayList<>();
+    public static LocalDateTime convertTimestampToLocalDateTime(Long timestamp) {
+        if (timestamp == null) {
+            return null;
         }
-        try {
-            return Arrays.stream(productIds.split(","))
-                    .map(Long::valueOf)
-                    .collect(Collectors.toList());
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException("Invalid product_ids format: " + productIds, e);
-        }
+        return LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(timestamp),
+                ZoneId.systemDefault()
+        );
     }
 
     public static BigDecimal calculatePriceWithCoefficient(BigDecimal price, BigDecimal coefficient) {
