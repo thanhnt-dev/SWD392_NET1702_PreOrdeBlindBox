@@ -3,6 +3,7 @@ package com.swd392.preOrderBlindBox.service.service;
 import com.swd392.preOrderBlindBox.entity.Cart;
 import com.swd392.preOrderBlindBox.entity.CartItem;
 import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
+import com.swd392.preOrderBlindBox.restcontroller.response.CartItemResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.CartResponse;
 
 import java.math.BigDecimal;
@@ -22,4 +23,10 @@ public interface CartService {
   Cart clearCart();
 
   BigDecimal calculateCartTotal();
+
+  BigDecimal calculateItemDiscountedPrice(CartItem item);
+
+  BigDecimal calculateItemTotal(CartItem item);
+
+  BigDecimal calculateItemDiscountedPrice(CartItemResponse item);
 }

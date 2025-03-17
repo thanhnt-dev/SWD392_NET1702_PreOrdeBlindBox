@@ -2,11 +2,15 @@ package com.swd392.preOrderBlindBox.service.serviceimpl;
 
 import com.swd392.preOrderBlindBox.common.enums.*;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
+import com.swd392.preOrderBlindBox.common.util.Util;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.repository.repository.PreorderItemRepository;
 import com.swd392.preOrderBlindBox.repository.repository.PreorderRepository;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderItemEstimateResponse;
 import com.swd392.preOrderBlindBox.service.service.*;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,15 @@ public class PreorderServiceImpl implements PreorderService {
     private final UserService userService;
     private final BlindboxPackageService blindboxPackageService;
     private final BlindboxService blindboxService;
+    @Value("${deposit.rate:0.5}")
+    private BigDecimal depositRate;
+
+    @PostConstruct
+    public void init() {
+        if (depositRate == null || depositRate.compareTo(BigDecimal.ZERO) <= 0 || depositRate.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalArgumentException("Invalid deposit.rate: " + depositRate + ". Must be between 0 and 1.");
+        }
+    }
 
     @Override
     public Preorder createPreorder(Preorder preorderRequest) {
@@ -40,8 +53,22 @@ public class PreorderServiceImpl implements PreorderService {
 
         preorderRequest.setUser(userService.getCurrentUser().orElseThrow(() -> new ResourceNotFoundException(ErrorCode.USER_NOT_FOUND)));
         preorderRequest.setOrderCode(generateOrderCode());
-        preorderRequest.setTotalPrice(cartService.calculateCartTotal());
-        preorderRequest.setPreorderStatus(PreorderStatus.DEPOSIT_PENDING);
+        preorderRequest.setPreorderStatus(PreorderStatus.PENDING);
+
+        BigDecimal estimatedTotalAmount = cartService.calculateCartTotal();
+        BigDecimal depositAmount = Util.calculatePriceWithCoefficient(estimatedTotalAmount, depositRate);
+        BigDecimal remainingAmount = null;
+        BigDecimal totalAmount = null;
+
+        if (!hasCampaignItemOfTypeGroup(cart)) {
+            totalAmount = estimatedTotalAmount;
+            remainingAmount = Util.normalizePrice(totalAmount.subtract(depositAmount));
+        }
+
+        preorderRequest.setEstimatedTotalAmount(estimatedTotalAmount);
+        preorderRequest.setTotalAmount(totalAmount);
+        preorderRequest.setDepositAmount(depositAmount);
+        preorderRequest.setRemainingAmount(remainingAmount);
 
         Preorder savedPreorder = preorderRepository.save(preorderRequest);
 
@@ -59,16 +86,14 @@ public class PreorderServiceImpl implements PreorderService {
         return savedPreorder;
     }
 
-    private PreorderItem getPreorderItem(Preorder preorderRequest, CartItem cartItem) {
-        BigDecimal itemTotal = cartItem.getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()));
-        if (cartItem.getDiscountPercent() > 0) {
-            BigDecimal discountFactor = BigDecimal.ONE.subtract(
-                    BigDecimal.valueOf(cartItem.getDiscountPercent()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP));
-            itemTotal = itemTotal.multiply(discountFactor);
-        }
+    private boolean hasCampaignItemOfTypeGroup(Cart cart) {
+        return cart.getCartItems().stream()
+                .anyMatch(item -> item.getItemCampaignType() == CampaignType.GROUP);
+    }
 
+    private PreorderItem getPreorderItem(Preorder preorderRequest, CartItem cartItem) {
         PreorderItem.PreorderItemBuilder builder = PreorderItem.builder()
-                .originalPrice(itemTotal)
+                .originalPrice(cartService.calculateItemTotal(cartItem))
                 .preorder(preorderRequest)
                 .blindboxSeries(cartItem.getSeries())
                 .itemFromCampaignType(cartItem.getItemCampaignType())
@@ -76,7 +101,7 @@ public class PreorderServiceImpl implements PreorderService {
                 .productType(cartItem.getProductType());
 
         if (cartItem.getItemCampaignType() == CampaignType.MILESTONE || cartItem.getItemCampaignType() == null) {
-            builder.lockedPrice(itemTotal);
+            builder.lockedPrice(cartService.calculateItemTotal(cartItem));
         }
 
         return builder.build();
@@ -89,12 +114,7 @@ public class PreorderServiceImpl implements PreorderService {
 
     @Override
     public Optional<Preorder> getPreorderByOrderCode(String orderCode) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Preorder updatePreorder(Preorder preorder) {
-        return null;
+        return preorderRepository.findByOrderCode(orderCode);
     }
 
     @Override
@@ -107,22 +127,14 @@ public class PreorderServiceImpl implements PreorderService {
     }
 
     @Override
-    public BigDecimal calculateDepositAmount(Long preorderId) {
-        return null;
+    public BigDecimal calculateDepositAmount(BigDecimal price) {
+        return Util.calculatePriceWithCoefficient(price, depositRate);
     }
 
     @Override
-    public BigDecimal calculateFullPaymentAmount(Long preorderId) {
-        List<PreorderItem> preorderItems = preorderItemRepository.findByPreorderId(preorderId);
-
-        BigDecimal totalAmount = preorderItems.stream()
-                .map(preorderItem -> preorderItem.getItemFromCampaignType() == CampaignType.MILESTONE ||
-                        preorderItem.getItemFromCampaignType() == null ?
-                        preorderItem.getLockedPrice() :
-                        preorderItem.getOriginalPrice())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return totalAmount.setScale(2, RoundingMode.HALF_UP);
+    public BigDecimal calculateRemainingAmount(BigDecimal price) {
+        BigDecimal deposit = calculateDepositAmount(price);
+        return Util.normalizePrice(price.subtract(deposit));
     }
 
     @Override
@@ -136,6 +148,41 @@ public class PreorderServiceImpl implements PreorderService {
         }
 
         preorderRepository.save(preorder);
+    }
+
+    @Override
+    public void updatePreorder(Preorder preorder) {
+        if (preorder == null || preorder.getId() == null) {
+            throw new IllegalArgumentException("Cannot update null preorder or preorder without ID");
+        }
+
+        Preorder existingPreorder = preorderRepository.findById(preorder.getId())
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+
+        existingPreorder.setPreorderStatus(preorder.getPreorderStatus());
+        existingPreorder.setTotalAmount(preorder.getTotalAmount());
+        existingPreorder.setDepositAmount(preorder.getDepositAmount());
+        existingPreorder.setRemainingAmount(preorder.getRemainingAmount());
+
+        if (preorder.getPreorderItems() != null) {
+            for (PreorderItem updatedItem : preorder.getPreorderItems()) {
+                if (updatedItem.getId() != null) {
+                    PreorderItem existingItem = preorderItemRepository.findById(updatedItem.getId())
+                            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+                    existingItem.setQuantity(updatedItem.getQuantity());
+                    existingItem.setOriginalPrice(updatedItem.getOriginalPrice());
+                    existingItem.setLockedPrice(updatedItem.getLockedPrice());
+                    existingItem.setProductIds(updatedItem.getProductIds());
+                } else {
+                    updatedItem.setPreorder(existingPreorder);
+                    preorderItemRepository.save(updatedItem);
+                }
+            }
+        }
+
+        preorderRepository.save(existingPreorder);
     }
 
     private void assignProductsToPreorderItem(PreorderItem preorderItem) {

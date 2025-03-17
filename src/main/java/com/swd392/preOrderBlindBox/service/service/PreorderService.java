@@ -13,13 +13,13 @@ public interface PreorderService {
 
     Optional<Preorder> getPreorderByOrderCode(String orderCode);
 
-    Preorder updatePreorder(Preorder preorder);
-
     Preorder updatePreorderStatus(Long id, PreorderStatus status);
 
-    BigDecimal calculateDepositAmount(Long preorderId);
+    BigDecimal calculateDepositAmount(BigDecimal price);
 
-    BigDecimal calculateFullPaymentAmount(Long preorderId);
+    BigDecimal calculateRemainingAmount(BigDecimal price);
 
     void assignBlindboxProductToPreorderItem(Long preorderId);
+
+    void updatePreorder(Preorder preorder);
 }

@@ -3,10 +3,12 @@ package com.swd392.preOrderBlindBox.service.serviceimpl;
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
+import com.swd392.preOrderBlindBox.common.util.Util;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.repository.repository.CartItemRepository;
 import com.swd392.preOrderBlindBox.repository.repository.CartRepository;
 import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
+import com.swd392.preOrderBlindBox.restcontroller.response.CartItemResponse;
 import com.swd392.preOrderBlindBox.service.service.BlindboxSeriesService;
 import com.swd392.preOrderBlindBox.service.service.CartService;
 import com.swd392.preOrderBlindBox.service.service.PreorderCampaignService;
@@ -135,16 +137,26 @@ public class CartServiceImpl implements CartService {
             .setScale(2, RoundingMode.HALF_UP);
   }
 
-  private BigDecimal calculateItemTotal(CartItem item) {
+  @Override
+  public BigDecimal calculateItemTotal(CartItem item) {
     BigDecimal discountedPrice = calculateItemDiscountedPrice(item);
-    return discountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+    return Util.calculatePriceWithCoefficient(discountedPrice, BigDecimal.valueOf(item.getQuantity()));
   }
 
-  private BigDecimal calculateItemDiscountedPrice(CartItem item) {
-    BigDecimal price = item.getPrice();
-    BigDecimal discountPercent = BigDecimal.valueOf(item.getDiscountPercent())
+  @Override
+  public BigDecimal calculateItemDiscountedPrice(CartItem item) {
+    return calculateDiscountedPrice(item.getPrice(), item.getDiscountPercent());
+  }
+
+  @Override
+  public BigDecimal calculateItemDiscountedPrice(CartItemResponse item) {
+    return calculateDiscountedPrice(item.getPrice(), item.getDiscountPercent());
+  }
+
+  private BigDecimal calculateDiscountedPrice(BigDecimal price, double discountPercent) {
+    BigDecimal discountFactor = BigDecimal.valueOf(discountPercent)
             .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-    return price.multiply(BigDecimal.ONE.subtract(discountPercent));
+    return Util.calculatePriceWithCoefficient(price, BigDecimal.ONE.subtract(discountFactor));
   }
 
   private CartItem createCartItemFromRequest(CartItemRequest cartItemRequest, Cart cart) {
@@ -180,7 +192,6 @@ public class CartServiceImpl implements CartService {
   }
 
   private void updateOrSaveCartItem(CartItem cartItem, Cart cart) {
-    // Find existing item by cartId, seriesId, and productType
     CartItem existingItem = cartItemRepository
             .findByCartIdAndSeriesIdAndProductType(
                     cart.getId(),
@@ -190,20 +201,19 @@ public class CartServiceImpl implements CartService {
             .orElse(null);
 
     if (existingItem != null) {
-      // Same productType: update quantity
       int newQuantity = existingItem.getQuantity() + cartItem.getQuantity();
+      validateProductAvailability(existingItem, newQuantity);
       if (newQuantity <= 0) {
         cartItemRepository.delete(existingItem);
-        cart.getCartItems().remove(existingItem); // Sync in-memory collection
+        cart.getCartItems().remove(existingItem);
       } else {
         existingItem.setQuantity(newQuantity);
-        existingItem.setPrice(cartItem.getPrice()); // Update price if changed
+        existingItem.setPrice(cartItem.getPrice());
         cartItemRepository.save(existingItem);
       }
     } else if (cartItem.getQuantity() > 0) {
-      // Different productType or no existing item: add as new
-      cartItem.setCart(cart); // Ensure cart reference is set
-      cart.getCartItems().add(cartItem); // Add to in-memory collection
+      cartItem.setCart(cart);
+      cart.getCartItems().add(cartItem);
       cartItemRepository.save(cartItem);
     }
   }

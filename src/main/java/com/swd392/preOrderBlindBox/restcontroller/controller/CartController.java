@@ -190,13 +190,7 @@ public class CartController {
     List<CartItemResponse> cartItems = cart.getCartItems();
     if (cartItems != null) {
       for (CartItemResponse item : cartItems) {
-        BigDecimal price = item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO;
-        BigDecimal discountPercent = BigDecimal.valueOf(item.getDiscountPercent())
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        BigDecimal unitDiscountedPrice = price.multiply(BigDecimal.ONE.subtract(discountPercent));
-        BigDecimal totalDiscountedPrice = unitDiscountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()))
-                .setScale(2, RoundingMode.HALF_UP);
-        item.setDiscountedPrice(totalDiscountedPrice);
+        item.setDiscountedPrice(cartService.calculateItemDiscountedPrice(item));
       }
     }
   }

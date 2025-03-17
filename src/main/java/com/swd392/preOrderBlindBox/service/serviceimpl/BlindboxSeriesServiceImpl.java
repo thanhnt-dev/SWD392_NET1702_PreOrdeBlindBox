@@ -79,10 +79,6 @@ public class BlindboxSeriesServiceImpl implements BlindboxSeriesService {
 
   @Override
   public int getAvailablePackageQuantityOfSeries(Long seriesId) {
-    System.out.println((int)
-            blindboxPackageRepository.findBySeriesId(seriesId).stream()
-                    .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)
-                    .count());
     return (int)
         blindboxPackageRepository.findBySeriesId(seriesId).stream()
             .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)

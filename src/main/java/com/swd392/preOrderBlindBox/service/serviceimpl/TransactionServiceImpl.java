@@ -28,7 +28,12 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction createTransaction(Long preorderId, TransactionType transactionType, BigDecimal amount, boolean isDeposit) {
-        Preorder preorder = preorderService.getPreorderById(preorderId).orElse(null);
+        Preorder preorder = preorderService.getPreorderById(preorderId)
+                .orElseThrow(() -> new IllegalArgumentException("Preorder not found"));;
+
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Transaction amount must be positive");
+        }
 
         Transaction transaction = Transaction.builder()
                 .preorder(preorder)
@@ -37,8 +42,15 @@ public class TransactionServiceImpl implements TransactionService {
                 .transactionType(transactionType)
                 .user(userService.getCurrentUser().orElse(null))
                 .transactionStatus(TransactionStatus.PENDING)
-                .content(preorder != null ? preorder.getOrderCode() : null)
+                .content(preorder.getOrderCode())
                 .build();
+        if (!isDeposit) {
+            Transaction existingTransaction = transactionRepository.findByPreorderId(preorderId).stream()
+                    .filter(t -> t.getTransactionStatus() == TransactionStatus.SUCCESS)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Deposit transaction not found"));
+            transaction.setRelatedTransaction(existingTransaction);
+        }
 
         return transactionRepository.save(transaction);
     }
@@ -61,23 +73,4 @@ public class TransactionServiceImpl implements TransactionService {
     public Optional<Transaction> getTransactionById(Long id) {
         return transactionRepository.findById(id);
     }
-
-
-
-//    private String generateTransactionCode() {
-//        String alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//        StringBuilder code = new StringBuilder();
-//
-//        code.append("TX");
-//
-//        String timestamp = String.valueOf(System.currentTimeMillis());
-//        code.append(timestamp.substring(Math.max(0, timestamp.length() - 8)));
-//
-//        SecureRandom random = new SecureRandom();
-//        while (code.length() < 20) {
-//            code.append(alphanumeric.charAt(random.nextInt(alphanumeric.length())));
-//        }
-//
-//        return code.toString();
-//    }
 }

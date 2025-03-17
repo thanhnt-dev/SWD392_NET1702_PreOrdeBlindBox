@@ -71,13 +71,16 @@ public class RestExceptionHandler {
     return buildErrorResponse("VALIDATION_ERROR", ex.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(IllegalStateException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ResponseEntity<BaseResponse<ExceptionResponse>> handleIllegalStateException(
+          IllegalArgumentException ex) {
+    return buildErrorResponse("INVALID STATE", ex.getMessage(), HttpStatus.BAD_REQUEST);
+  }
+
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ResponseEntity<BaseResponse<?>> handleGenericException(Exception ex) {
-    // Log the full stack trace
-    ex.printStackTrace();
-    System.out.println("Unexpected error: " + ex.getMessage());
-
     var errorResponse = BaseResponse.build(null, false);
     return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
   }

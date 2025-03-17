@@ -7,6 +7,7 @@ import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PaymentResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderEstimateResponse;
 import com.swd392.preOrderBlindBox.service.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,29 +31,72 @@ public class CheckoutController {
 
     private final CheckoutFacade checkoutFacade;
 
-    @PostMapping
+    @PostMapping("/deposit")
     @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @ResponseStatus(HttpStatus.OK)
     @Operation(
-            summary = "Process checkout",
+            summary = "Process deposit checkout",
             tags = {"Checkout APIs"})
     @ApiResponses(
             value = {
                     @ApiResponse(responseCode = "200", description = "Checkout process initiated"),
                     @ApiResponse(
+                            responseCode = "403",
+                            description = "Unauthorized access to cart",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                    @ApiResponse(
                             responseCode = "500",
                             description = "Internal server error",
                             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
             })
-    public BaseResponse<String> processCheckout(@Valid @RequestBody PreorderRequest preorderRequest) {
-        Preorder preorder = checkoutFacade.createPreorder(preorderRequest);
+    public BaseResponse<String> processDepositCheckout(@Valid @RequestBody PreorderRequest preorderRequest) {
+        return checkoutFacade.initiateDepositPayment(preorderRequest, TransactionType.VNPAY);
+    }
 
-        if (preorder != null && preorder.getId() != null) {
-            String paymentUrl = checkoutFacade.initiatePayment(preorder.getId(), TransactionType.VNPAY, false);
-            return BaseResponse.build(paymentUrl, true);
-        } else {
-            return BaseResponse.build("Failed to create preorder", false);
-        }
+    @PostMapping("/remaining-amount/{preorderId}")
+    @PreAuthorize("hasRole('USER')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Process checkout for remaining amount of preorder",
+            tags = {"Checkout APIs"})
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Checkout process initiated"),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Unauthorized access to cart",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+            })
+    public BaseResponse<String> processRemainingAmountCheckout(@PathVariable @NotNull Long preorderId) {
+        return checkoutFacade.initiateRemainingAmountPayment(preorderId, TransactionType.VNPAY);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('USER')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Get checkout information (including estimate information for preorder)",
+            tags = {"Checkout APIs"})
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Information retrieved successfully"),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Unauthorized access to cart",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+            })
+    public BaseResponse<PreorderEstimateResponse> getCheckoutInformation() {
+        return checkoutFacade.getPreorderEstimate();
     }
 }

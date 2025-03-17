@@ -6,12 +6,15 @@ import com.swd392.preOrderBlindBox.entity.Preorder;
 import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PaymentResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderEstimateResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface CheckoutFacade {
-    Preorder createPreorder(PreorderRequest preorderRequest);
+    BaseResponse<String> initiateDepositPayment(PreorderRequest preorderRequest, TransactionType transactionType);
 
-    String initiatePayment(Long preorderId, TransactionType transactionType, boolean isDeposit);
+    BaseResponse<String> initiateRemainingAmountPayment(Long preorderId, TransactionType transactionType);
+
+    BaseResponse<PreorderEstimateResponse> getPreorderEstimate();
 
     String finalizePayment(Long transactionId, String transactionCode, Long preorderId, boolean success);
 
