@@ -36,8 +36,17 @@ public class Preorder extends BaseEntity implements Serializable {
   @Column(name = "preorder_status")
   private PreorderStatus preorderStatus;
 
-  @Column(name = "total_price", precision = 10, scale = 2)
-  private BigDecimal totalPrice;
+  @Column(name = "estimated_total_amount", precision = 10, scale = 2)
+  private BigDecimal estimatedTotalAmount;
+
+  @Column(name = "total_amount", precision = 10, scale = 2)
+  private BigDecimal totalAmount;
+
+  @Column(name = "deposit_amount", precision = 10, scale = 2)
+  private BigDecimal depositAmount;
+
+  @Column(name = "remaining_amount", precision = 10, scale = 2)
+  private BigDecimal remainingAmount;
 
   @OneToMany(
       mappedBy = "preorder",

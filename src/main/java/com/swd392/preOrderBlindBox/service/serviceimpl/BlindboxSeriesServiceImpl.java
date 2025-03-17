@@ -10,6 +10,7 @@ import com.swd392.preOrderBlindBox.service.service.BlindboxPackageService;
 import com.swd392.preOrderBlindBox.service.service.BlindboxSeriesService;
 import java.util.List;
 import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,11 +79,6 @@ public class BlindboxSeriesServiceImpl implements BlindboxSeriesService {
 
   @Override
   public int getAvailablePackageQuantityOfSeries(Long seriesId) {
-    System.out.println(
-        (int)
-            blindboxPackageRepository.findBySeriesId(seriesId).stream()
-                .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)
-                .count());
     return (int)
         blindboxPackageRepository.findBySeriesId(seriesId).stream()
             .filter(pkg -> pkg.getStatus() == PackageStatus.SEALED)
