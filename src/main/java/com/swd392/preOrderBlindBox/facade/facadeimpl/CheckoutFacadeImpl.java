@@ -201,7 +201,7 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
                 .orElseThrow(() -> new IllegalArgumentException("Preorder not found"));
 
 
-        if (preorder.getPreorderStatus() != PreorderStatus.PENDING) {
+        if (preorder.getPreorderStatus() != PreorderStatus.PENDING && preorder.getPreorderStatus() != PreorderStatus.DEPOSIT_PAID) {
             throw new IllegalArgumentException("Invalid preorder status for payment");
         }
 
