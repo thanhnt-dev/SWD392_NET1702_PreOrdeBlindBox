@@ -1,15 +1,11 @@
 package com.swd392.preOrderBlindBox.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.swd392.preOrderBlindBox.common.enums.CampaignType;
 import com.swd392.preOrderBlindBox.common.enums.ProductType;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
 import lombok.*;
 
 @Entity
@@ -48,5 +44,4 @@ public class PreorderItem extends BaseEntity implements Serializable {
   @Enumerated(EnumType.STRING)
   @Column(name = "item_from_campaign_type")
   private CampaignType itemFromCampaignType;
-
 }

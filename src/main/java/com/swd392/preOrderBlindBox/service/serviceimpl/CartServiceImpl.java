@@ -99,7 +99,9 @@ public class CartServiceImpl implements CartService {
   @Transactional
   public Cart removeCartItem(Long cartItemId) {
     Cart cart = getOrCreateCart();
-    CartItem cartItem = cartItemRepository.findById(cartItemId)
+    CartItem cartItem =
+        cartItemRepository
+            .findById(cartItemId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
     verifyCartItemOwnership(cartItem);
@@ -130,9 +132,9 @@ public class CartServiceImpl implements CartService {
     List<CartItem> cartItems = getCartItems();
 
     return cartItems.stream()
-            .map(this::calculateItemTotal)
-            .reduce(BigDecimal.ZERO, BigDecimal::add)
-            .setScale(2, RoundingMode.HALF_UP);
+        .map(this::calculateItemTotal)
+        .reduce(BigDecimal.ZERO, BigDecimal::add)
+        .setScale(2, RoundingMode.HALF_UP);
   }
 
   private BigDecimal calculateItemTotal(CartItem item) {
@@ -142,51 +144,58 @@ public class CartServiceImpl implements CartService {
 
   private BigDecimal calculateItemDiscountedPrice(CartItem item) {
     BigDecimal price = item.getPrice();
-    BigDecimal discountPercent = BigDecimal.valueOf(item.getDiscountPercent())
+    BigDecimal discountPercent =
+        BigDecimal.valueOf(item.getDiscountPercent())
             .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     return price.multiply(BigDecimal.ONE.subtract(discountPercent));
   }
 
   private CartItem createCartItemFromRequest(CartItemRequest cartItemRequest, Cart cart) {
     CartItem cartItem = modelMapper.map(cartItemRequest, CartItem.class);
-    BlindboxSeries series = blindboxSeriesService.getBlindboxSeriesById(cartItemRequest.getBlindboxSeriesId())
+    BlindboxSeries series =
+        blindboxSeriesService
+            .getBlindboxSeriesById(cartItemRequest.getBlindboxSeriesId())
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
     cartItem.setSeries(series);
     if (cartItem.getProductType() == null) {
       throw new IllegalArgumentException("Product type is required");
     }
-    BigDecimal price = cartItem.getProductType() == ProductType.PACKAGE ? series.getPackagePrice() : series.getBoxPrice();
+    BigDecimal price =
+        cartItem.getProductType() == ProductType.PACKAGE
+            ? series.getPackagePrice()
+            : series.getBoxPrice();
     if (price == null) {
       throw new IllegalStateException("Price for series ID " + series.getId() + " is null");
     }
     cartItem.setPrice(price);
     cartItem.setCart(cart);
-    cartItem.setItemCampaignType(preorderCampaignService.getOngoingCampaignOfBlindboxSeries(cartItemRequest
-                    .getBlindboxSeriesId())
+    cartItem.setItemCampaignType(
+        preorderCampaignService
+            .getOngoingCampaignOfBlindboxSeries(cartItemRequest.getBlindboxSeriesId())
             .map(PreorderCampaign::getCampaignType)
             .orElse(null));
     return cartItem;
   }
 
   private void applyCampaignDiscount(CartItem cartItem) {
-    PreorderCampaign ongoingCampaign = preorderCampaignService
+    PreorderCampaign ongoingCampaign =
+        preorderCampaignService
             .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
             .orElse(null);
     if (ongoingCampaign != null && cartItem.getItemCampaignType() != null) {
       validateDiscountedUnitsAvailability(cartItem);
       cartItem.setDiscountPercent(
-              preorderCampaignService.getDiscountOfActiveTierOfOnGoingCampaign(ongoingCampaign.getId()));
+          preorderCampaignService.getDiscountOfActiveTierOfOnGoingCampaign(
+              ongoingCampaign.getId()));
     }
   }
 
   private void updateOrSaveCartItem(CartItem cartItem, Cart cart) {
     // Find existing item by cartId, seriesId, and productType
-    CartItem existingItem = cartItemRepository
+    CartItem existingItem =
+        cartItemRepository
             .findByCartIdAndSeriesIdAndProductType(
-                    cart.getId(),
-                    cartItem.getSeries().getId(),
-                    cartItem.getProductType()
-            )
+                cart.getId(), cartItem.getSeries().getId(), cartItem.getProductType())
             .orElse(null);
 
     if (existingItem != null) {
@@ -252,13 +261,13 @@ public class CartServiceImpl implements CartService {
     switch (cartItem.getProductType()) {
       case PACKAGE:
         if (blindboxSeriesService.getAvailablePackageQuantityOfSeries(cartItem.getSeries().getId())
-                < quantity) {
+            < quantity) {
           throw new IllegalArgumentException("Not enough package units available");
         }
         break;
       case BOX:
         if (blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(cartItem.getSeries().getId())
-                < quantity) {
+            < quantity) {
           throw new IllegalArgumentException("Not enough box units available");
         }
         break;
@@ -275,8 +284,8 @@ public class CartServiceImpl implements CartService {
 
     switch (cartItem.getItemCampaignType()) {
       case GROUP:
-        case null:
-            break;
+      case null:
+        break;
       case MILESTONE:
         int availableDiscountedUnits =
             preorderCampaignService.getCurrentUnitsCountOfActiveTierOfOngoingCampaign(
@@ -285,16 +294,16 @@ public class CartServiceImpl implements CartService {
           throw new IllegalArgumentException("Not enough discounted units available");
         }
         break;
-        default:
+      default:
         throw new IllegalArgumentException("Invalid item campaign type");
     }
   }
 
   private void validateDiscountedUnitsAvailability(CartItem cartItem, int quantity) {
     PreorderCampaign activeCampaign =
-            preorderCampaignService
-                    .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("No active campaign found"));
+        preorderCampaignService
+            .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
+            .orElseThrow(() -> new IllegalArgumentException("No active campaign found"));
 
     switch (cartItem.getItemCampaignType()) {
       case GROUP:
@@ -302,8 +311,8 @@ public class CartServiceImpl implements CartService {
         break;
       case MILESTONE:
         int availableDiscountedUnits =
-                preorderCampaignService.getCurrentUnitsCountOfActiveTierOfOngoingCampaign(
-                        activeCampaign.getId());
+            preorderCampaignService.getCurrentUnitsCountOfActiveTierOfOngoingCampaign(
+                activeCampaign.getId());
         if (availableDiscountedUnits < quantity) {
           throw new IllegalArgumentException("Not enough discounted units available");
         }

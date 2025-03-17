@@ -92,7 +92,8 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
 
   @Override
   public void incrementUnitsCount(Long campaignId, int unitsCount) {
-    CampaignTier activeTier = findActiveTier(campaignId)
+    CampaignTier activeTier =
+        findActiveTier(campaignId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
     activeTier.setCurrentCount(activeTier.getCurrentCount() + unitsCount);
   }

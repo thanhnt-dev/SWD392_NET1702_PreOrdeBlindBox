@@ -3,8 +3,6 @@ package com.swd392.preOrderBlindBox.service.service;
 import com.swd392.preOrderBlindBox.entity.Cart;
 import com.swd392.preOrderBlindBox.entity.CartItem;
 import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
-import com.swd392.preOrderBlindBox.restcontroller.response.CartResponse;
-
 import java.math.BigDecimal;
 import java.util.List;
 

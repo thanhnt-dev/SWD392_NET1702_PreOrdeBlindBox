@@ -15,4 +15,6 @@ public interface BlindboxSeriesItemService {
   void deactiveItem(Long id);
 
   List<BlindboxSeriesItem> saveAll(List<BlindboxSeriesItem> items);
+
+  void save(BlindboxSeriesItem item);
 }

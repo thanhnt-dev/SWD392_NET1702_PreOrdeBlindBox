@@ -2,20 +2,24 @@ package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.enums.Role;
+import com.swd392.preOrderBlindBox.common.exception.OTPException;
 import com.swd392.preOrderBlindBox.common.exception.UserException;
+import com.swd392.preOrderBlindBox.dto.OtpMailDTO;
 import com.swd392.preOrderBlindBox.entity.User;
 import com.swd392.preOrderBlindBox.facade.facade.UserFacade;
 import com.swd392.preOrderBlindBox.infrastructure.security.SecurityUserDetails;
-import com.swd392.preOrderBlindBox.restcontroller.request.LoginRequest;
-import com.swd392.preOrderBlindBox.restcontroller.request.RegisterRequest;
-import com.swd392.preOrderBlindBox.restcontroller.request.UserCriteria;
+import com.swd392.preOrderBlindBox.restcontroller.request.*;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.LoginResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PaginationResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.UserInfoResponse;
+import com.swd392.preOrderBlindBox.service.service.CacheService;
 import com.swd392.preOrderBlindBox.service.service.JwtTokenService;
+import com.swd392.preOrderBlindBox.service.service.MailQueueProducer;
 import com.swd392.preOrderBlindBox.service.service.UserService;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +36,8 @@ public class UserFacadeImpl implements UserFacade {
   private final UserService userService;
   private final JwtTokenService jwtService;
   private final PasswordEncoder passwordEncoder;
+  private final CacheService cacheService;
+  private final MailQueueProducer mailQueueProducer;
 
   @Override
   public BaseResponse<LoginResponse> login(LoginRequest request) {
@@ -97,6 +103,52 @@ public class UserFacadeImpl implements UserFacade {
         result.getContent().stream().map(this::buildUserInfoResponse).toList();
     return BaseResponse.build(
         PaginationResponse.build(responses, result, criteria.getCurrentPage()), true);
+  }
+
+  @Override
+  public BaseResponse<Void> forgotPassword(ForgotPasswordRequest request) {
+    User user = userService.findByEmail(request.getEmail());
+    String cacheKey = String.format("%s-%s", "FORGOT_PASSWORD", request.getEmail());
+
+    boolean isKeyExist = cacheService.hasKey(cacheKey);
+    if (isKeyExist) cacheService.delete(cacheKey);
+    sendOTP(request.getEmail());
+    return BaseResponse.ok();
+  }
+
+  @Override
+  public void resendOTP(ForgotPasswordRequest request) {
+    String cacheKey = String.format("%s-%s", "FORGOT_PASSWORD", request.getEmail());
+
+    boolean isKeyExist = cacheService.hasKey(cacheKey);
+    if (isKeyExist) cacheService.delete(cacheKey);
+    sendOTP(request.getEmail());
+  }
+
+  @Override
+  public void confirmOTP(ConfirmOTPRequest request) {
+    String cacheKey = String.format("%s-%s", "FORGOT_PASSWORD", request.getEmail());
+    String cachedValue = (String) cacheService.retrieve(cacheKey);
+    if (null == cachedValue) throw new OTPException(ErrorCode.OTP_INVALID_OR_EXPIRED);
+    boolean isValidOTP = cachedValue.equals(request.getOtpCode());
+    if (!isValidOTP) throw new OTPException(ErrorCode.OTP_NOT_MATCH);
+
+    cacheService.delete(cacheKey);
+  }
+
+  private String generateOtp() {
+    Random random = new Random();
+    int otp = random.nextInt(999999);
+    return String.format("%06d", otp);
+  }
+
+  private void sendOTP(String receiverMail) {
+    String otp = generateOtp();
+    String cacheKey = String.format("%s-%s", "FORGOT_PASSWORD", receiverMail);
+
+    cacheService.store(cacheKey, otp, 5, TimeUnit.MINUTES);
+    mailQueueProducer.sendMailMessage(
+        OtpMailDTO.builder().receiverMail(receiverMail).otpCode(otp).build());
   }
 
   private UserInfoResponse buildUserInfoResponse(User user) {

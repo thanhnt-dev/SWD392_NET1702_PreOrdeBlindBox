@@ -2,7 +2,6 @@ package com.swd392.preOrderBlindBox.restcontroller.response;
 
 import com.swd392.preOrderBlindBox.common.enums.CampaignType;
 import com.swd392.preOrderBlindBox.common.enums.ProductType;
-import com.swd392.preOrderBlindBox.entity.Cart;
 import java.math.BigDecimal;
 import lombok.*;
 

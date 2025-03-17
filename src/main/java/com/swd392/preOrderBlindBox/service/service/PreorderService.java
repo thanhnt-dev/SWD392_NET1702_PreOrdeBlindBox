@@ -2,24 +2,23 @@ package com.swd392.preOrderBlindBox.service.service;
 
 import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
 import com.swd392.preOrderBlindBox.entity.Preorder;
-
 import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface PreorderService {
-    Preorder createPreorder(Preorder preorder);
+  Preorder createPreorder(Preorder preorder);
 
-    Optional<Preorder> getPreorderById(Long id);
+  Optional<Preorder> getPreorderById(Long id);
 
-    Optional<Preorder> getPreorderByOrderCode(String orderCode);
+  Optional<Preorder> getPreorderByOrderCode(String orderCode);
 
-    Preorder updatePreorder(Preorder preorder);
+  Preorder updatePreorder(Preorder preorder);
 
-    Preorder updatePreorderStatus(Long id, PreorderStatus status);
+  Preorder updatePreorderStatus(Long id, PreorderStatus status);
 
-    BigDecimal calculateDepositAmount(Long preorderId);
+  BigDecimal calculateDepositAmount(Long preorderId);
 
-    BigDecimal calculateFullPaymentAmount(Long preorderId);
+  BigDecimal calculateFullPaymentAmount(Long preorderId);
 
-    void assignBlindboxProductToPreorderItem(Long preorderId);
+  void assignBlindboxProductToPreorderItem(Long preorderId);
 }

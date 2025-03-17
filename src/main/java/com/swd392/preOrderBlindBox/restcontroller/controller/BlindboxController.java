@@ -10,6 +10,7 @@ import com.swd392.preOrderBlindBox.specification.BlindboxSeriesSpecification;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,8 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/${api.version}/blindbox")
@@ -71,5 +74,17 @@ public class BlindboxController {
       tags = {"Blindbox Series APIs"})
   BaseResponse<Void> createBlindbox(@Valid @RequestBody CreateBlindboxSeriesRequest request) {
     return blindboxFacade.createBlindboxSeries(request);
+  }
+
+  @PutMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('STAFF')")
+  @SecurityRequirement(name = "Bearer Authentication")
+  @Operation(
+      tags = {"Blindbox Series APIs"},
+      summary = "Add image blindbox item")
+  public BaseResponse<Void> uploadImage(
+      @PathVariable Long id, @RequestPart List<MultipartFile> files) {
+    return this.blindboxFacade.uploadImageForBlindboxItem(id, files);
   }
 }

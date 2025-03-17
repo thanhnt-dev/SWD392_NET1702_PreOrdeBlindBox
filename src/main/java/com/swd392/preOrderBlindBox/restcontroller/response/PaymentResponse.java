@@ -1,6 +1,5 @@
 package com.swd392.preOrderBlindBox.restcontroller.response;
 
-
 import lombok.*;
 
 @AllArgsConstructor
@@ -9,5 +8,5 @@ import lombok.*;
 @Setter
 @Builder
 public class PaymentResponse {
-    public String paymentUrl;
+  public String paymentUrl;
 }

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BlindboxAssetRepository extends JpaRepository<BlindboxAsset, Long> {
-  List<BlindboxAsset> findByEntityId(Long blindboxSeriesId);
+  List<BlindboxAsset> findByEntityId(Long id);
 }

@@ -13,7 +13,9 @@ public enum ErrorCode {
   PHONE_AND_MAIL_EXIST("1004", "Both phone number and email already exist"),
   EMAIL_EXIST("1005", "Email already exists"),
   PHONE_EXIST("1006", "Phone number already exists"),
-  UNAUTHORIZED_CART_ACCESS("1007", "Cannot access cart that doesn't belong to current user");
+  UNAUTHORIZED_CART_ACCESS("1007", "Cannot access cart that doesn't belong to current user"),
+  OTP_INVALID_OR_EXPIRED("1008", "Your Code invalid or expired"),
+  OTP_NOT_MATCH("1009", "Your Code does not match");
 
   private final String code;
   private final String message;

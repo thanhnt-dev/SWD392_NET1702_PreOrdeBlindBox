@@ -1,7 +1,5 @@
 package com.swd392.preOrderBlindBox.restcontroller.controller;
 
-import com.swd392.preOrderBlindBox.entity.Cart;
-import com.swd392.preOrderBlindBox.entity.CartItem;
 import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.CartItemResponse;
@@ -17,16 +15,15 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/${api.version}/cart")
@@ -90,7 +87,8 @@ public class CartController {
       })
   public BaseResponse<CartResponse> addItemsToCart(
       @Valid @RequestBody CartItemRequest cartItemRequest) {
-    CartResponse cartResponse = mapper.map(cartService.addToCart(cartItemRequest), CartResponse.class);
+    CartResponse cartResponse =
+        mapper.map(cartService.addToCart(cartItemRequest), CartResponse.class);
     calculateItemDiscountedPrices(cartResponse);
     return BaseResponse.build(cartResponse, true);
   }
@@ -125,7 +123,8 @@ public class CartController {
   public BaseResponse<CartResponse> updateCartItemQuantity(
       @PathVariable @NotNull Long cartItemId,
       @RequestParam @Min(value = 1, message = "Quantity must be at least 1") int quantity) {
-    CartResponse cartResponse = mapper.map(cartService.updateCartItemQuantity(cartItemId, quantity), CartResponse.class);
+    CartResponse cartResponse =
+        mapper.map(cartService.updateCartItemQuantity(cartItemId, quantity), CartResponse.class);
     calculateItemDiscountedPrices(cartResponse);
     return BaseResponse.build(cartResponse, true);
   }
@@ -154,7 +153,8 @@ public class CartController {
             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
       })
   public BaseResponse<CartResponse> removeCartItem(@PathVariable @NotNull Long cartItemId) {
-    CartResponse cartResponse = mapper.map(cartService.removeCartItem(cartItemId), CartResponse.class);
+    CartResponse cartResponse =
+        mapper.map(cartService.removeCartItem(cartItemId), CartResponse.class);
     calculateItemDiscountedPrices(cartResponse);
     return BaseResponse.build(cartResponse, true);
   }
@@ -191,14 +191,16 @@ public class CartController {
     if (cartItems != null) {
       for (CartItemResponse item : cartItems) {
         BigDecimal price = item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO;
-        BigDecimal discountPercent = BigDecimal.valueOf(item.getDiscountPercent())
+        BigDecimal discountPercent =
+            BigDecimal.valueOf(item.getDiscountPercent())
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal unitDiscountedPrice = price.multiply(BigDecimal.ONE.subtract(discountPercent));
-        BigDecimal totalDiscountedPrice = unitDiscountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()))
+        BigDecimal totalDiscountedPrice =
+            unitDiscountedPrice
+                .multiply(BigDecimal.valueOf(item.getQuantity()))
                 .setScale(2, RoundingMode.HALF_UP);
         item.setDiscountedPrice(totalDiscountedPrice);
       }
     }
   }
-
 }
