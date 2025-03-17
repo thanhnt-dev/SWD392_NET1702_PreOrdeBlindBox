@@ -86,6 +86,8 @@ public class SecurityConfig {
     CorsConfiguration corsConfig = new CorsConfiguration();
     corsConfig.addAllowedOrigin("http://localhost:5173");
     corsConfig.addAllowedOrigin("https://preorder-blindbox.vercel.app");
+    corsConfig.addAllowedOrigin("exp://192.168.1.12:8081");
+    corsConfig.addAllowedOrigin("http://localhost:8081"); // Thêm origin này
     corsConfig.addAllowedMethod("*");
     corsConfig.addAllowedHeader("*");
     corsConfig.setAllowCredentials(true);
