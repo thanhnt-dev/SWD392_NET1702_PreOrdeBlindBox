@@ -61,4 +61,10 @@ public class BlindboxSeriesItemServiceImpl implements BlindboxSeriesItemService 
   public List<BlindboxSeriesItem> saveAll(List<BlindboxSeriesItem> items) {
     return blindboxSeriesItemRepository.saveAll(items);
   }
+
+  @Override
+  @Transactional
+  public void save(BlindboxSeriesItem item) {
+    blindboxSeriesItemRepository.save(item);
+  }
 }

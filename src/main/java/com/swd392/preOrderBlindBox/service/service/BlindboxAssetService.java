@@ -15,4 +15,6 @@ public interface BlindboxAssetService {
   BlindboxAsset updateBlindboxAsset(BlindboxAsset blindboxAsset, Long id);
 
   void deleteBlindboxAsset(Long id);
+
+  void saveBlindboxAsset(BlindboxAsset blindboxAsset);
 }

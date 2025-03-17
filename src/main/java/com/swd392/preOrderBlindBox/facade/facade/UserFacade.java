@@ -1,8 +1,6 @@
 package com.swd392.preOrderBlindBox.facade.facade;
 
-import com.swd392.preOrderBlindBox.restcontroller.request.LoginRequest;
-import com.swd392.preOrderBlindBox.restcontroller.request.RegisterRequest;
-import com.swd392.preOrderBlindBox.restcontroller.request.UserCriteria;
+import com.swd392.preOrderBlindBox.restcontroller.request.*;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.LoginResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PaginationResponse;
@@ -19,4 +17,10 @@ public interface UserFacade {
   BaseResponse<Void> updateUserActiveStatus(Long id, boolean isActive);
 
   BaseResponse<PaginationResponse<List<UserInfoResponse>>> getUserByFilter(UserCriteria criteria);
+
+  BaseResponse<Void> forgotPassword(ForgotPasswordRequest request);
+
+  void resendOTP(ForgotPasswordRequest request);
+
+  void confirmOTP(ConfirmOTPRequest request);
 }

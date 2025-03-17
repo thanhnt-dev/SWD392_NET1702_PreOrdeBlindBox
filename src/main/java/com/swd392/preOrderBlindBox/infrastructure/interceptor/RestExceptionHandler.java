@@ -1,6 +1,7 @@
 package com.swd392.preOrderBlindBox.infrastructure.interceptor;
 
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
+import com.swd392.preOrderBlindBox.common.exception.OTPException;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.common.exception.SignUpException;
 import com.swd392.preOrderBlindBox.common.exception.UserException;
@@ -23,6 +24,14 @@ public class RestExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResponseEntity<BaseResponse<ExceptionResponse>> handleUserException(
       UserException exception) {
+    return buildErrorResponse(
+        exception.getErrorCode(), exception.getMessage(), HttpStatus.BAD_REQUEST);
+  }
+
+  @ExceptionHandler(OTPException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ResponseEntity<BaseResponse<ExceptionResponse>> handleOTPException(
+      OTPException exception) {
     return buildErrorResponse(
         exception.getErrorCode(), exception.getMessage(), HttpStatus.BAD_REQUEST);
   }

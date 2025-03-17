@@ -14,7 +14,8 @@ public enum ErrorCode {
   EMAIL_EXIST("1005", "Email already exists"),
   PHONE_EXIST("1006", "Phone number already exists"),
   UNAUTHORIZED_CART_ACCESS("1007", "Cannot access cart that doesn't belong to current user"),
-  REMAINING_AMOUNT_PAYMENT_INITIALIZATION_FAILED("1008", "Failed to initialize payment for remaining amount");
+  OTP_INVALID_OR_EXPIRED("1008", "Your Code invalid or expired"),
+  OTP_NOT_MATCH("1009", "Your Code does not match");
 
   private final String code;
   private final String message;
