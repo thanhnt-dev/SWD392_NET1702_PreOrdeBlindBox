@@ -24,8 +24,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   private final List<String> PUBLIC_URL =
       List.of(
           "/api/v1/users/login",
-          "/api/v1/blindbox-series",
-          "/api/v1/blindbox-series/*",
+          "/api/v1/users/signup",
+          "/api/v1/users/confirm-otp",
+          "/api/v1/users/resend-otp",
+          "/api/v1/users/forgot-password",
+          "/api/v1/blindbox/*",
+          "/api/v1/blindbox/**",
           "/api/v1/users/signup");
 
   private final JwtTokenService jwtTokenServices;

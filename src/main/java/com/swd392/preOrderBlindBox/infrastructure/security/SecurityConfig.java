@@ -17,7 +17,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -31,10 +30,20 @@ public class SecurityConfig {
   }
 
   private final String[] WHITE_LIST = {
-          "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
+    "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-ui/index.html"
   };
 
-  private final String[] PUBLIC_LIST = {"/api/v1/users/login", "/api/v1/blindbox", "/api/v1/blindbox/*", "/api/v1/payment", "/api/v1/payment/*"};
+  private final String[] PUBLIC_LIST = {
+    "/api/v1/users/login",
+    "/api/v1/users/signup",
+    "/api/v1/users/confirm-otp",
+    "/api/v1/users/resend-otp",
+    "/api/v1/users/forgot-password",
+    "/api/v1/blindbox",
+    "/api/v1/blindbox/**",
+    "/api/v1/payment",
+    "/api/v1/payment/*"
+  };
 
   @Bean
   public PasswordEncoder passwordEncoder() {
@@ -51,7 +60,7 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationManager authenticationManager(
-          AuthenticationConfiguration authenticationConfiguration) throws Exception {
+      AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
   }
 
@@ -63,19 +72,19 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .formLogin(AbstractHttpConfigurer::disable)
-            .sessionManagement(
-                    session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(
-                    request ->
-                            request
-                                    .requestMatchers(WHITE_LIST)
-                                    .permitAll()
-                                    .requestMatchers(PUBLIC_LIST)
-                                    .permitAll()
-                                    .anyRequest()
-                                    .authenticated());
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .formLogin(AbstractHttpConfigurer::disable)
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(
+            request ->
+                request
+                    .requestMatchers(WHITE_LIST)
+                    .permitAll()
+                    .requestMatchers(PUBLIC_LIST)
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated());
     http.authenticationProvider(authenticationProvider());
     http.addFilterBefore(authTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     return http.build();

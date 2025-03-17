@@ -1,6 +1,9 @@
 server:
   port: 8080
-
+rabbitmq:
+  name: mailQueue
+  exchangeName: mailExchange
+  mailRoutingKey: mailRoutingKey
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -15,3 +18,28 @@ spring:
   jwt:
     secretKey: 85br1PWiVMiDqYllgMB7XZBdVb90sBy7DjsLFl08wsbC12yTF2W0KMX/pHIPU+T28uXuNw/fGu5P/nxncsaNEA==
     accessTokenExpirationTime: 172800000 # 2 days
+  cloudinary:
+    cloudName: djjgysqat
+    apiKey: 142738356163672
+    apiSecret: BLkzfFqfuLphU2zbXCasNFs73tU
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: thanhntse171854@fpt.edu.vn
+    password: kkmr xiic fqml jbif
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

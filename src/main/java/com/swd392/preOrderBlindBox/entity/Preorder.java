@@ -39,7 +39,11 @@ public class Preorder extends BaseEntity implements Serializable {
   @Column(name = "total_price", precision = 10, scale = 2)
   private BigDecimal totalPrice;
 
-  @OneToMany(mappedBy = "preorder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @OneToMany(
+      mappedBy = "preorder",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
   @JsonManagedReference
   private List<PreorderItem> preorderItems;
 

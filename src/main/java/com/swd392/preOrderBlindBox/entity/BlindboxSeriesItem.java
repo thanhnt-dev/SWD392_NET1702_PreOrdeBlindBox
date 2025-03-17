@@ -26,4 +26,12 @@ public class BlindboxSeriesItem extends BaseEntity implements Serializable {
 
   @OneToMany(mappedBy = "revealedItem")
   private List<Blindbox> blindboxes;
+
+  //  @OneToMany(mappedBy = "entityId", cascade = CascadeType.ALL, orphanRemoval = true)
+  //  private List<BlindboxAsset> assets = new ArrayList<>();
+  //
+  //  public void add(BlindboxAsset blindboxAsset) {
+  //    assets.add(blindboxAsset);
+  //    blindboxAsset.setEntityId(this);
+  //  }
 }

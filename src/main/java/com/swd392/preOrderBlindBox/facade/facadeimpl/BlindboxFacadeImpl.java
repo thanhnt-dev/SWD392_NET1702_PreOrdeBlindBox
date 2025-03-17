@@ -9,11 +9,13 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -24,10 +26,13 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   private final BlindboxAssetService blindboxAssetService;
   private final PreorderCampaignService preorderCampaignService;
   private final ModelMapper mapper;
+  private final CloudinaryService cloudinaryService;
 
   @Override
   public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
-    BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id)
+    BlindboxSeries blindboxSeries =
+        blindboxSeriesService
+            .getBlindboxSeriesById(id)
             .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
     BlindboxSeriesDetailsResponse response =
         mapper.map(blindboxSeries, BlindboxSeriesDetailsResponse.class);
@@ -106,7 +111,9 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   @Override
   public BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(
       Long id) {
-    BlindboxSeries blindboxSeries = blindboxSeriesService.getBlindboxSeriesById(id)
+    BlindboxSeries blindboxSeries =
+        blindboxSeriesService
+            .getBlindboxSeriesById(id)
             .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
     BlindboxSeriesManagementDetailsResponse response =
         mapper.map(blindboxSeries, BlindboxSeriesManagementDetailsResponse.class);
@@ -148,6 +155,20 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
                         .build())
             .toList();
     blindboxSeriesItemService.saveAll(items);
+    return BaseResponse.ok();
+  }
+
+  @Override
+  @SneakyThrows
+  @Transactional
+  public BaseResponse<Void> uploadImageForBlindboxItem(Long id, List<MultipartFile> files) {
+    BlindboxSeriesItem item = blindboxSeriesItemService.getItemById(id);
+    for (MultipartFile file : files) {
+      String mediaKey = cloudinaryService.uploadImage(file.getBytes());
+      BlindboxAsset asset =
+          BlindboxAsset.builder().mediaKey(mediaKey).entityId(item.getId()).build();
+      blindboxAssetService.saveBlindboxAsset(asset);
+    }
     return BaseResponse.ok();
   }
 }

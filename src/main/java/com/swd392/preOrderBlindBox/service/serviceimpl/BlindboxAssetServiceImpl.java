@@ -50,4 +50,9 @@ public class BlindboxAssetServiceImpl implements BlindboxAssetService {
   public void deleteBlindboxAsset(Long id) {
     blindboxAssetRepository.deleteById(id);
   }
+
+  @Override
+  public void saveBlindboxAsset(BlindboxAsset blindboxAsset) {
+    blindboxAssetRepository.save(blindboxAsset);
+  }
 }
