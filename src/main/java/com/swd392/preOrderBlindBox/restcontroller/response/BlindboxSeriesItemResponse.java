@@ -12,7 +12,7 @@ public class BlindboxSeriesItemResponse {
   private Long id;
   private Long seriesId;
   private String itemName;
-  private int itemChance;
+  private float itemChance;
   private boolean isActive;
   private List<String> imageUrls;
 }

@@ -3,10 +3,13 @@ package com.swd392.preOrderBlindBox.service.serviceimpl;
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.entity.Blindbox;
+import com.swd392.preOrderBlindBox.entity.BlindboxPackage;
 import com.swd392.preOrderBlindBox.repository.repository.BlindboxRepository;
 import com.swd392.preOrderBlindBox.service.service.BlindboxService;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +17,18 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BlindboxServiceImpl implements BlindboxService {
   private final BlindboxRepository blindboxRepository;
+
+  @Override
+  public List<Blindbox> createBlindboxesForPackage(int count, BlindboxPackage blindboxPackage) {
+    List<Blindbox> blindboxes = IntStream.range(0, count)
+            .mapToObj(i -> Blindbox.builder()
+                    .blindboxPackage(blindboxPackage)
+                    .isSold(false)
+                    .revealedItem(null)
+                    .build())
+            .collect(Collectors.toList());
+    return blindboxRepository.saveAll(blindboxes);
+  }
 
   @Override
   public Blindbox getBlindboxById(Long id) {
@@ -48,5 +63,10 @@ public class BlindboxServiceImpl implements BlindboxService {
     return blindboxRepository.findByBlindboxPackageId(packageId).stream()
         .filter(blindbox -> !blindbox.getIsSold())
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public Blindbox createBlindbox(Blindbox blindbox) {
+    return blindboxRepository.save(blindbox);
   }
 }

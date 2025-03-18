@@ -2,7 +2,7 @@ package com.swd392.preOrderBlindBox.restcontroller.controller;
 
 import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
 import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
-import com.swd392.preOrderBlindBox.restcontroller.request.CreateBlindboxSeriesRequest;
+import com.swd392.preOrderBlindBox.restcontroller.request.BlindboxSeriesCreateRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesDetailsResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesResponse;
@@ -33,8 +33,8 @@ public class BlindboxController {
   @ResponseStatus(HttpStatus.OK)
   @Operation(
       summary =
-          "Get blindbox series details by id, along with ongoing campaign (if any) and its tiers",
-      tags = {"Blindbox Series APIs"})
+          "Get blindbox series details by id, along with associated ongoing campaign (if any) and its tiers",
+      tags = {"Blindbox APIs"})
   public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesById(@PathVariable Long id) {
     return this.blindboxFacade.getBlindboxSeriesWithDetailsById(id);
   }
@@ -43,8 +43,8 @@ public class BlindboxController {
   @Operation(
       summary =
           "Get all blindbox series (searching, paging, sorting, and filtering are applicable)",
-      tags = {"Blindbox Series APIs"})
-  public BaseResponse<Page<BlindboxSeriesResponse>> searchBlindboxSeries(
+      tags = {"Blindbox APIs"})
+  public BaseResponse<Page<BlindboxSeriesResponse>> getBlindboxSeries(
       @RequestParam(required = false) String seriesName,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "10") int size,
@@ -70,9 +70,9 @@ public class BlindboxController {
   @PreAuthorize("hasRole('STAFF')")
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(
-      summary = "Create blind box for Admin",
-      tags = {"Blindbox Series APIs"})
-  BaseResponse<Void> createBlindbox(@Valid @RequestBody CreateBlindboxSeriesRequest request) {
+      summary = "Create blindbox series for Staff",
+      tags = {"Blindbox APIs"})
+  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(@Valid @RequestBody BlindboxSeriesCreateRequest request) {
     return blindboxFacade.createBlindboxSeries(request);
   }
 
@@ -81,7 +81,7 @@ public class BlindboxController {
   @PreAuthorize("hasRole('STAFF')")
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(
-      tags = {"Blindbox Series APIs"},
+      tags = {"Blindbox APIs"},
       summary = "Add image blindbox item")
   public BaseResponse<Void> uploadImage(
       @PathVariable Long id, @RequestPart List<MultipartFile> files) {

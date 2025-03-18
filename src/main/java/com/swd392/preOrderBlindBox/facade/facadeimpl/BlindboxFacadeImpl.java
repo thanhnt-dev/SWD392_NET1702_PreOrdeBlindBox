@@ -1,13 +1,20 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.PackageStatus;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
-import com.swd392.preOrderBlindBox.restcontroller.request.CreateBlindboxSeriesRequest;
+import com.swd392.preOrderBlindBox.restcontroller.request.BlindboxSeriesCreateRequest;
+import com.swd392.preOrderBlindBox.restcontroller.request.BlindboxSeriesItemsCreateRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.*;
 import com.swd392.preOrderBlindBox.service.service.*;
 import jakarta.transaction.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.modelmapper.ModelMapper;
@@ -27,6 +34,7 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   private final PreorderCampaignService preorderCampaignService;
   private final ModelMapper mapper;
   private final CloudinaryService cloudinaryService;
+  private final BlindboxService blindboxService;
 
   @Override
   public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
@@ -109,8 +117,7 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   }
 
   @Override
-  public BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(
-      Long id) {
+  public BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(Long id) {
     BlindboxSeries blindboxSeries =
         blindboxSeriesService
             .getBlindboxSeriesById(id)
@@ -134,28 +141,19 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
   @Override
   @Transactional
-  public BaseResponse<Void> createBlindboxSeries(CreateBlindboxSeriesRequest request) {
-    BlindboxSeries series =
-        BlindboxSeries.builder()
-            .seriesName(request.getSeriesName())
-            .description(request.getDescription())
-            .packagePrice(request.getPackagePrice())
-            .boxPrice(request.getBoxPrice())
-            .build();
-    BlindboxSeries blindboxSeries = blindboxSeriesService.createBlindboxSeries(series);
+  public BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request) {
+    BlindboxSeries blindboxSeries = mapper.map(request, BlindboxSeries.class);
+    BlindboxSeries savedBlindboxSeries = blindboxSeriesService.createBlindboxSeries(blindboxSeries);
 
-    List<BlindboxSeriesItem> items =
-        request.getItems().stream()
-            .map(
-                item ->
-                    BlindboxSeriesItem.builder()
-                        .blindboxSeries(series)
-                        .itemName(item.getItemName())
-                        .itemChance(item.getItemChance())
-                        .build())
-            .toList();
-    blindboxSeriesItemService.saveAll(items);
-    return BaseResponse.ok();
+    List<BlindboxPackage> packages = blindboxPackageService.createPackagesForSeries(request, savedBlindboxSeries);
+    List<BlindboxSeriesItem> items = blindboxSeriesItemService.createItemsForSeries(request.getItems(), savedBlindboxSeries);
+
+    savedBlindboxSeries.setPackages(packages);
+    savedBlindboxSeries.setItems(items);
+    blindboxSeriesService.updateBlindboxSeries(savedBlindboxSeries.getId(), savedBlindboxSeries);
+
+    BlindboxSeriesResponse response = mapper.map(savedBlindboxSeries, BlindboxSeriesResponse.class);
+    return BaseResponse.build(response, true);
   }
 
   @Override
@@ -170,5 +168,15 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
       blindboxAssetService.saveBlindboxAsset(asset);
     }
     return BaseResponse.ok();
+  }
+
+  @Override
+  public BaseResponse<BlindboxSeriesManagementDetailsResponse> addBlindboxPackagesToSeries(Long seriesId, int count) {
+    return null;
+  }
+
+  @Override
+  public BaseResponse<BlindboxSeriesManagementDetailsResponse> addBlindboxesToSeries(Long seriesId, int count) {
+    return null;
   }
 }
