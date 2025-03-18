@@ -11,7 +11,7 @@ import lombok.*;
 public class CampaignTierResponse {
   Long id;
   String alias;
-  int currentUnitsCount;
+  int currentCount;
   int thresholdQuantity;
   int tierOrder;
   int discountPercent;
