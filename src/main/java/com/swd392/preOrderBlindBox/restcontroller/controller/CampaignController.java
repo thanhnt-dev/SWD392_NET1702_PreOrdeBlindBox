@@ -54,4 +54,15 @@ public class CampaignController {
   BaseResponse<PreorderCampaignDetailsManagementResponse> getCampaignDetails(@Valid @PathVariable Long campaignId) {
     return campaignFacade.getCampaignDetails(campaignId);
   }
+
+  @PutMapping("/{campaignId}/end")
+  @PreAuthorize("hasRole('STAFF')")
+  @SecurityRequirement(name = "Bearer Authentication")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(
+          summary = "End a campaign and update associated preordered items",
+          tags = {"Campaign APIs"})
+  BaseResponse<Void> endCampaign(@Valid @PathVariable Long campaignId) {
+    return campaignFacade.endCampaign(campaignId);
+  }
 }
