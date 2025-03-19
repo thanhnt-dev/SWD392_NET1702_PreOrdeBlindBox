@@ -76,6 +76,8 @@ public class CampaignFacadeImpl implements CampaignFacade {
             .getBlindboxSeriesById(request.getBlindboxSeriesId())
             .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found")));
 
+      preorderCampaign.setCampaignTiers(new java.util.ArrayList<>());
+
     List<CampaignTier> campaignTiers = IntStream.range(0, request.getCampaignTiers().size())
             .mapToObj(i -> {
               CampaignTier campaignTier = mapper.map(request.getCampaignTiers().get(i), CampaignTier.class);
@@ -94,6 +96,7 @@ public class CampaignFacadeImpl implements CampaignFacade {
     campaignTiers.forEach(campaignTierService::createCampaignTier);
 
     PreorderCampaignDetailsManagementResponse response = mapper.map(preorderCampaign, PreorderCampaignDetailsManagementResponse.class);
+    response.setSeries(mapper.map(preorderCampaign.getBlindboxSeries(), com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesResponse.class));
     response.setCampaignTiers(campaignTiers.stream()
             .map(campaignTier -> mapper.map(campaignTier, CampaignTierResponse.class))
             .collect(Collectors.toList()));

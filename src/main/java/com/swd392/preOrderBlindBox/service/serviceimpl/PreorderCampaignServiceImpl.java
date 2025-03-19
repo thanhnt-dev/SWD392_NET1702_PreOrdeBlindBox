@@ -133,7 +133,8 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
 
     List<CampaignTier> sortedTiers = tiers.stream()
             .sorted(Comparator.comparingInt(CampaignTier::getTierOrder))
-            .collect(Collectors.toList());
+            .distinct()
+            .toList();
 
     CampaignType type = campaign.getCampaignType();
     for (int i = 1; i < sortedTiers.size(); i++) {

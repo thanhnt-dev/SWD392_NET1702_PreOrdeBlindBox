@@ -16,6 +16,7 @@ public class CampaignTierRequest {
   @Size(max = 50, message = "Alias không được quá 50 ký tự")
   private String alias;
 
+  @Min(value = 1, message = "Mốc giá trị phải >= 1")
   private int thresholdQuantity;
 
   @Min(value = 1, message = "Tier order phải >= 1")
