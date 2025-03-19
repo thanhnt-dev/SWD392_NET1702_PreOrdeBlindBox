@@ -55,8 +55,8 @@ public class CampaignFacadeImpl implements CampaignFacade {
     List<PreorderCampaignManagementResponse> response = campaigns.stream()
             .map(campaign -> {
                 PreorderCampaignManagementResponse preorderCampaignManagementResponse = mapper.map(campaign, PreorderCampaignManagementResponse.class);
-                preorderCampaignManagementResponse.setCurrentUnitsCount(preorderCampaignManagementResponse.getCurrentUnitsCount());
-                preorderCampaignManagementResponse.setTotalDiscountedUnits(preorderCampaignManagementResponse.getTotalDiscountedUnits());
+                preorderCampaignManagementResponse.setCurrentUnitsCount(preorderCampaignService.getCurrentUnitsCountOfCampaign(campaign.getId()));
+                preorderCampaignManagementResponse.setTotalDiscountedUnits(preorderCampaignService.getTotalDiscountedUnitsOfCampaign(campaign.getId()));
                 return preorderCampaignManagementResponse;
             })
             .collect(Collectors.toList());
