@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.service.service;
 
+import com.swd392.preOrderBlindBox.common.enums.AssetEntityType;
 import com.swd392.preOrderBlindBox.entity.BlindboxAsset;
 import java.util.List;
 
@@ -8,7 +9,7 @@ public interface BlindboxAssetService {
 
   BlindboxAsset getBlindboxAssetById(Long id);
 
-  List<BlindboxAsset> getBlindboxAssetsByEntityId(Long entityId);
+  List<BlindboxAsset> getBlindboxAssetsByEntityIdAndType(Long entityId, AssetEntityType entityType);
 
   BlindboxAsset createBlindboxAsset(BlindboxAsset blindboxAsset);
 

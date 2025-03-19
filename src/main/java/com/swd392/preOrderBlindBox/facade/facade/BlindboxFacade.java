@@ -6,6 +6,8 @@ import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesDetailsResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesManagementDetailsResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesResponse;
+
+import java.io.IOException;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,9 +22,11 @@ public interface BlindboxFacade {
 
   BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(Long id);
 
-  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request, List<MultipartFile> seriesImages);
+  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request, List<MultipartFile> seriesImages) throws IOException;
 
-  BaseResponse<Void> uploadImageForBlindboxItem(Long id, List<MultipartFile> file);
+  BaseResponse<Void> uploadImageForBlindboxItem(Long id, MultipartFile file) throws IOException;
+
+  BaseResponse<Void> uploadImageForBlindboxSeries(Long id, List<MultipartFile> files) throws IOException;
 
   BaseResponse<BlindboxSeriesManagementDetailsResponse> addBlindboxPackagesToSeries(Long seriesId, int count);
 

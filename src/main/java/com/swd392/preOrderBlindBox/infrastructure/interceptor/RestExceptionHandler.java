@@ -7,6 +7,8 @@ import com.swd392.preOrderBlindBox.common.exception.SignUpException;
 import com.swd392.preOrderBlindBox.common.exception.UserException;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -87,10 +89,17 @@ public class RestExceptionHandler {
     return buildErrorResponse("INVALID STATE", ex.getMessage(), HttpStatus.BAD_REQUEST);
   }
 
+  @ExceptionHandler(IOException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ResponseEntity<BaseResponse<ExceptionResponse>> handleIOException(
+          IOException ex) {
+    return buildErrorResponse("Error with handling files: ", ex.getMessage(), HttpStatus.BAD_REQUEST);
+  }
+
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ResponseEntity<BaseResponse<?>> handleGenericException(Exception ex) {
-    var errorResponse = BaseResponse.build(null, false);
+    var errorResponse = BaseResponse.build("Error: " + ex.getMessage(), false);
     return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 

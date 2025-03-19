@@ -10,6 +10,7 @@ import com.swd392.preOrderBlindBox.restcontroller.response.*;
 import com.swd392.preOrderBlindBox.service.service.*;
 import jakarta.transaction.Transactional;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,21 +48,13 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
     response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId(), AssetEntityType.BLINDBOX_SERIES));
     response.setItems(getBlindboxItems(blindboxSeries));
-    response.setAvailablePackageUnits(
-        blindboxSeriesService.getAvailablePackageQuantityOfSeries(blindboxSeries.getId()));
-    response.setAvailableBoxUnits(
-        blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(blindboxSeries.getId()));
+    response.setAvailablePackageUnits(blindboxSeriesService.getAvailablePackageQuantityOfSeries(blindboxSeries.getId()));
+    response.setAvailableBoxUnits(blindboxSeriesService.getAvailableBlindboxQuantityOfSeries(blindboxSeries.getId()));
     response.setActiveCampaign(getCampaignDetails(blindboxSeries));
 
     return BaseResponse.build(response, true);
   }
 
-  private List<String> getImageUrls(Long entityId, AssetEntityType entityType) {
-    return blindboxAssetService.getBlindboxAssetsByEntityId(entityId).stream()
-        .filter(asset -> asset.getAssetEntityType().equals(entityType))
-        .map(BlindboxAsset::getMediaKey)
-        .toList();
-  }
 
   private List<BlindboxSeriesItemResponse> getBlindboxItems(BlindboxSeries blindboxSeries) {
     List<BlindboxSeriesItemResponse> items =
@@ -71,7 +64,7 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
     items.forEach(
         item -> {
-          item.setImageUrls(getImageUrls(item.getId(), AssetEntityType.BLINDBOX_SERIES_ITEM));
+          item.setImageUrl(getThumbnailImageUrl(item.getId(), AssetEntityType.BLINDBOX_SERIES_ITEM));
           item.setSeriesId(blindboxSeries.getId());
         });
     return items;
@@ -106,14 +99,7 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     return blindboxSeriesPage.map(
         series -> {
           BlindboxSeriesResponse response = mapper.map(series, BlindboxSeriesResponse.class);
-
-          List<String> imageUrls =
-              blindboxAssetService.getBlindboxAssetsByEntityId(series.getId()).stream()
-                      .filter(asset -> asset.getAssetEntityType().equals(AssetEntityType.BLINDBOX_SERIES))
-                      .map(BlindboxAsset::getMediaKey)
-                      .toList();
-          response.setSeriesImageUrls(imageUrls);
-
+          response.setSeriesImageUrl(getThumbnailImageUrl(series.getId(), AssetEntityType.BLINDBOX_SERIES));
           return response;
         });
   }
@@ -124,27 +110,24 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
         blindboxSeriesService
             .getBlindboxSeriesById(id)
             .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
-    BlindboxSeriesManagementDetailsResponse response =
-        mapper.map(blindboxSeries, BlindboxSeriesManagementDetailsResponse.class);
-    List<BlindboxAsset> assets =
-        blindboxAssetService.getBlindboxAssetsByEntityId(blindboxSeries.getId());
-    List<BlindboxAssetResponse> assetResponses =
-        assets.stream()
-            .map(
-                asset -> {
-                  BlindboxAssetResponse assetResponse = new BlindboxAssetResponse();
-                  mapper.map(asset, assetResponse);
-                  return assetResponse;
-                })
-            .toList();
+    BlindboxSeriesManagementDetailsResponse response = mapper.map(blindboxSeries, BlindboxSeriesManagementDetailsResponse.class);
+    List<BlindboxAsset> assets = blindboxAssetService.getBlindboxAssetsByEntityIdAndType(blindboxSeries.getId(), AssetEntityType.BLINDBOX_SERIES);
+    List<BlindboxAssetResponse> assetResponses = new ArrayList<>();
+
+      for (BlindboxAsset asset : assets) {
+          BlindboxAssetResponse assetResponse = mapper.map(asset, BlindboxAssetResponse.class);
+          assetResponse.setMediaUrl(asset.getMediaKey());
+          assetResponses.add(assetResponse);
+      }
+
     response.setAssets(assetResponses);
     return BaseResponse.build(response, true);
   }
 
-  @SneakyThrows
+
   @Override
   @Transactional
-  public BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request, List<MultipartFile> seriesImages) {
+  public BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request, List<MultipartFile> seriesImages) throws IOException {
     BlindboxSeries blindboxSeries = mapper.map(request, BlindboxSeries.class);
     BlindboxSeries savedBlindboxSeries = blindboxSeriesService.createBlindboxSeries(blindboxSeries);
 
@@ -168,22 +151,76 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     blindboxSeriesService.updateBlindboxSeries(savedBlindboxSeries.getId(), savedBlindboxSeries);
 
     BlindboxSeriesResponse response = mapper.map(savedBlindboxSeries, BlindboxSeriesResponse.class);
+    response.setSeriesImageUrl(getThumbnailImageUrl(savedBlindboxSeries.getId(), AssetEntityType.BLINDBOX_SERIES));
     return BaseResponse.build(response, true);
   }
 
   @Override
-  @SneakyThrows
   @Transactional
-  public BaseResponse<Void> uploadImageForBlindboxItem(Long id, List<MultipartFile> files) {
+  public BaseResponse<Void> uploadImageForBlindboxItem(Long id, MultipartFile file) throws IOException {
+    // Validate input
+    if (id == null) {
+      throw new IllegalArgumentException("Blindbox item ID cannot be null");
+    }
+    if (file == null || file.isEmpty()) {
+      throw new IllegalArgumentException("Image file is required and cannot be empty");
+    }
+
+    // Check file type (optional, adjust as needed)
+    String contentType = file.getContentType();
+    if (contentType == null || !contentType.startsWith("image/")) {
+      throw new IllegalArgumentException("Only image files are supported");
+    }
+
+    // Fetch item
     BlindboxSeriesItem item = blindboxSeriesItemService.getItemById(id);
+    if (item == null) {
+      throw new IllegalArgumentException("Blindbox item not found with ID: " + id);
+    }
+
+    // Handle existing assets
+    List<BlindboxAsset> assets = blindboxAssetService.getBlindboxAssetsByEntityIdAndType(id, AssetEntityType.BLINDBOX_SERIES_ITEM);
+    if (assets.size() > 1) {
+      throw new IllegalStateException("Multiple assets found for item ID: " + id + "; expected at most one");
+    }
+    if (!assets.isEmpty()) {
+      blindboxAssetService.deleteBlindboxAsset(assets.getFirst().getId());
+    }
+
+    // Upload new image
+    String mediaKey = cloudinaryService.uploadImage(file.getBytes());
+    if (mediaKey == null || mediaKey.trim().isEmpty()) {
+      throw new IllegalStateException("Failed to upload image to Cloudinary");
+    }
+
+    // Create and save new asset
+    BlindboxAsset asset = BlindboxAsset.builder()
+            .mediaKey(mediaKey)
+            .entityId(item.getId())
+            .assetEntityType(AssetEntityType.BLINDBOX_SERIES_ITEM)
+            .build();
+    blindboxAssetService.saveBlindboxAsset(asset);
+
+    return BaseResponse.ok();
+  }
+
+  @Override
+  @Transactional
+  public BaseResponse<Void> uploadImageForBlindboxSeries(Long id, List<MultipartFile> files) throws IOException {
+    BlindboxSeries series = blindboxSeriesService.getBlindboxSeriesById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Blindbox series not found"));
+    return getAssets(files, series.getId(), AssetEntityType.BLINDBOX_SERIES);
+  }
+
+  private BaseResponse<Void> getAssets(List<MultipartFile> files, Long id, AssetEntityType entityType) throws IOException {
     for (MultipartFile file : files) {
       String mediaKey = cloudinaryService.uploadImage(file.getBytes());
       BlindboxAsset asset =
-          BlindboxAsset.builder()
-                  .mediaKey(mediaKey)
-                  .entityId(item.getId())
-                  .assetEntityType(AssetEntityType.BLINDBOX_SERIES_ITEM)
-                  .build();
+              BlindboxAsset.builder()
+                      .mediaKey(mediaKey)
+                      .entityId(id)
+                      .assetEntityType(entityType)
+                      .build();
       blindboxAssetService.saveBlindboxAsset(asset);
     }
     return BaseResponse.ok();
@@ -198,4 +235,18 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   public BaseResponse<BlindboxSeriesManagementDetailsResponse> addBlindboxesToSeries(Long seriesId, int count) {
     throw new UnsupportedOperationException("Not implemented yet");
   }
+
+
+  private String getThumbnailImageUrl(Long entityId, AssetEntityType entityType) {
+    return blindboxAssetService.getBlindboxAssetsByEntityIdAndType(entityId, entityType).stream()
+            .map(asset -> cloudinaryService.getImageUrl(asset.getMediaKey()))
+            .findFirst()
+            .orElse(null);
+  }
+
+    private List<String> getImageUrls(Long entityId, AssetEntityType entityType) {
+        return blindboxAssetService.getBlindboxAssetsByEntityIdAndType(entityId, entityType).stream()
+                .map(asset -> cloudinaryService.getImageUrl(asset.getMediaKey()))
+                .collect(Collectors.toList());
+    }
 }

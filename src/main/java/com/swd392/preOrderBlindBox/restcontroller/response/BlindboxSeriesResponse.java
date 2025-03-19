@@ -16,5 +16,5 @@ public class BlindboxSeriesResponse {
   private BigDecimal packagePrice;
   private BigDecimal boxPrice;
   private boolean isActive;
-  private List<String> seriesImageUrls;
+  private String seriesImageUrl;
 }
