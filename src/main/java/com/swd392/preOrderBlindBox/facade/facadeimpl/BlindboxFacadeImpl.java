@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.AssetEntityType;
 import com.swd392.preOrderBlindBox.common.enums.PackageStatus;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
@@ -34,7 +35,6 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
   private final PreorderCampaignService preorderCampaignService;
   private final ModelMapper mapper;
   private final CloudinaryService cloudinaryService;
-  private final BlindboxService blindboxService;
 
   @Override
   public BaseResponse<BlindboxSeriesDetailsResponse> getBlindboxSeriesWithDetailsById(Long id) {
@@ -45,7 +45,7 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     BlindboxSeriesDetailsResponse response =
         mapper.map(blindboxSeries, BlindboxSeriesDetailsResponse.class);
 
-    response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId()));
+    response.setSeriesImageUrls(getImageUrls(blindboxSeries.getId(), AssetEntityType.BLINDBOX_SERIES));
     response.setItems(getBlindboxItems(blindboxSeries));
     response.setAvailablePackageUnits(
         blindboxSeriesService.getAvailablePackageQuantityOfSeries(blindboxSeries.getId()));
@@ -56,8 +56,9 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     return BaseResponse.build(response, true);
   }
 
-  private List<String> getImageUrls(Long entityId) {
+  private List<String> getImageUrls(Long entityId, AssetEntityType entityType) {
     return blindboxAssetService.getBlindboxAssetsByEntityId(entityId).stream()
+        .filter(asset -> asset.getAssetEntityType().equals(entityType))
         .map(BlindboxAsset::getMediaKey)
         .toList();
   }
@@ -70,7 +71,7 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
     items.forEach(
         item -> {
-          item.setImageUrls(getImageUrls(item.getId()));
+          item.setImageUrls(getImageUrls(item.getId(), AssetEntityType.BLINDBOX_SERIES_ITEM));
           item.setSeriesId(blindboxSeries.getId());
         });
     return items;
@@ -108,8 +109,9 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
           List<String> imageUrls =
               blindboxAssetService.getBlindboxAssetsByEntityId(series.getId()).stream()
-                  .map(BlindboxAsset::getMediaKey)
-                  .toList();
+                      .filter(asset -> asset.getAssetEntityType().equals(AssetEntityType.BLINDBOX_SERIES))
+                      .map(BlindboxAsset::getMediaKey)
+                      .toList();
           response.setSeriesImageUrls(imageUrls);
 
           return response;
@@ -139,9 +141,10 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     return BaseResponse.build(response, true);
   }
 
+  @SneakyThrows
   @Override
   @Transactional
-  public BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request) {
+  public BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request, List<MultipartFile> seriesImages) {
     BlindboxSeries blindboxSeries = mapper.map(request, BlindboxSeries.class);
     BlindboxSeries savedBlindboxSeries = blindboxSeriesService.createBlindboxSeries(blindboxSeries);
 
@@ -150,6 +153,18 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
     savedBlindboxSeries.setPackages(packages);
     savedBlindboxSeries.setItems(items);
+
+    for (MultipartFile file : seriesImages) {
+      String mediaKey = cloudinaryService.uploadImage(file.getBytes());
+      BlindboxAsset asset =
+              BlindboxAsset.builder()
+                      .mediaKey(mediaKey)
+                      .entityId(savedBlindboxSeries.getId())
+                      .assetEntityType(AssetEntityType.BLINDBOX_SERIES)
+                      .build();
+      blindboxAssetService.saveBlindboxAsset(asset);
+    }
+
     blindboxSeriesService.updateBlindboxSeries(savedBlindboxSeries.getId(), savedBlindboxSeries);
 
     BlindboxSeriesResponse response = mapper.map(savedBlindboxSeries, BlindboxSeriesResponse.class);
@@ -164,7 +179,11 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
     for (MultipartFile file : files) {
       String mediaKey = cloudinaryService.uploadImage(file.getBytes());
       BlindboxAsset asset =
-          BlindboxAsset.builder().mediaKey(mediaKey).entityId(item.getId()).build();
+          BlindboxAsset.builder()
+                  .mediaKey(mediaKey)
+                  .entityId(item.getId())
+                  .assetEntityType(AssetEntityType.BLINDBOX_SERIES_ITEM)
+                  .build();
       blindboxAssetService.saveBlindboxAsset(asset);
     }
     return BaseResponse.ok();

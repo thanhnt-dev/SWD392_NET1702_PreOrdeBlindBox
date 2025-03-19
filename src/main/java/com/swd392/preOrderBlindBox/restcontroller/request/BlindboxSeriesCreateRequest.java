@@ -41,8 +41,6 @@ public class BlindboxSeriesCreateRequest {
   @NotNull(message = "Number of whole-sale package is required")
   private int numberOfWholeSalePackage;
 
-  private List<String> seriesImages;  //TODO: Change to MultipartFile
-
   @NotEmpty(message = "Items are required")
   private List<BlindboxSeriesItemsCreateRequest> items;
 }

@@ -65,15 +65,17 @@ public class BlindboxController {
     return BaseResponse.build(blindboxSeriesPage, true);
   }
 
-  @PostMapping()
+  @PostMapping(consumes = "multipart/form-data")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('STAFF')")
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(
       summary = "Create blindbox series for Staff",
       tags = {"Blindbox APIs"})
-  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(@Valid @RequestBody BlindboxSeriesCreateRequest request) {
-    return blindboxFacade.createBlindboxSeries(request);
+  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(@Valid
+                                                            @RequestPart("seriesImages") List<MultipartFile> seriesImages,
+                                                            @RequestPart("request") @RequestBody BlindboxSeriesCreateRequest request) {
+    return blindboxFacade.createBlindboxSeries(request, seriesImages);
   }
 
   @PutMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

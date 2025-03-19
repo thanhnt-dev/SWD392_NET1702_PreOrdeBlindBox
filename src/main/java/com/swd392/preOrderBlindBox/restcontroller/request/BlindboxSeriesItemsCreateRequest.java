@@ -13,5 +13,4 @@ import org.springframework.web.multipart.MultipartFile;
 public class BlindboxSeriesItemsCreateRequest {
   private String itemName;
   private float itemChance;
-  private String itemImage; //TODO: Change to MultipartFile
 }

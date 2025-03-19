@@ -20,7 +20,7 @@ public interface BlindboxFacade {
 
   BaseResponse<BlindboxSeriesManagementDetailsResponse> getBlindboxSeriesForManagement(Long id);
 
-  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request);
+  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(BlindboxSeriesCreateRequest request, List<MultipartFile> seriesImages);
 
   BaseResponse<Void> uploadImageForBlindboxItem(Long id, List<MultipartFile> file);
 
