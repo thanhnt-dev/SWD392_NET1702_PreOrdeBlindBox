@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.restcontroller.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
 import com.swd392.preOrderBlindBox.facade.facade.BlindboxFacade;
 import com.swd392.preOrderBlindBox.restcontroller.request.BlindboxSeriesCreateRequest;
@@ -8,8 +9,11 @@ import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesDetails
 import com.swd392.preOrderBlindBox.restcontroller.response.BlindboxSeriesResponse;
 import com.swd392.preOrderBlindBox.specification.BlindboxSeriesSpecification;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+
+import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -65,15 +69,29 @@ public class BlindboxController {
     return BaseResponse.build(blindboxSeriesPage, true);
   }
 
-  @PostMapping()
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('STAFF')")
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(
-      summary = "Create blindbox series for Staff",
-      tags = {"Blindbox APIs"})
-  BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(@Valid @RequestBody BlindboxSeriesCreateRequest request) {
-    return blindboxFacade.createBlindboxSeries(request);
+          summary = "Create blindbox series for Staff",
+          tags = {"Blindbox APIs"})
+  public BaseResponse<BlindboxSeriesResponse> createBlindboxSeries(
+          @RequestPart(value = "seriesImages") List<MultipartFile> seriesImages,
+          @RequestPart(value = "request") BlindboxSeriesCreateRequest request) throws IOException {
+    return blindboxFacade.createBlindboxSeries(request, seriesImages);
+  }
+
+  @PutMapping(value = "/asset/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @ResponseStatus(HttpStatus.OK)
+  @PreAuthorize("hasRole('STAFF')")
+  @SecurityRequirement(name = "Bearer Authentication")
+  @Operation(
+          tags = {"Blindbox APIs"},
+          summary = "Add images for blindbox series")
+  public BaseResponse<Void> uploadBlindboxSeriesImages(
+          @PathVariable Long id, @RequestPart List<MultipartFile> files) throws IOException {
+    return this.blindboxFacade.uploadImageForBlindboxSeries(id, files);
   }
 
   @PutMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -82,9 +100,9 @@ public class BlindboxController {
   @SecurityRequirement(name = "Bearer Authentication")
   @Operation(
       tags = {"Blindbox APIs"},
-      summary = "Add image blindbox item")
-  public BaseResponse<Void> uploadImage(
-      @PathVariable Long id, @RequestPart List<MultipartFile> files) {
-    return this.blindboxFacade.uploadImageForBlindboxItem(id, files);
+      summary = "Add images for blindbox items")
+  public BaseResponse<Void> uploadBlindboxSeriesItemImage(
+      @PathVariable Long id, @RequestPart MultipartFile file) throws IOException {
+    return this.blindboxFacade.uploadImageForBlindboxItem(id, file);
   }
 }

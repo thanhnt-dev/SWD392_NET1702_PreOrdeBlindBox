@@ -14,5 +14,5 @@ public class BlindboxSeriesItemResponse {
   private String itemName;
   private float itemChance;
   private boolean isActive;
-  private List<String> imageUrls;
+  private String imageUrl;
 }

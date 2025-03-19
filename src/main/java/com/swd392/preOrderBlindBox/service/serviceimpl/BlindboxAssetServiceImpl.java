@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.service.serviceimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.AssetEntityType;
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.entity.BlindboxAsset;
@@ -27,8 +28,8 @@ public class BlindboxAssetServiceImpl implements BlindboxAssetService {
   }
 
   @Override
-  public List<BlindboxAsset> getBlindboxAssetsByEntityId(Long entityId) {
-    return blindboxAssetRepository.findByEntityId(entityId);
+  public List<BlindboxAsset> getBlindboxAssetsByEntityIdAndType(Long entityId, AssetEntityType entityType) {
+    return blindboxAssetRepository.findByEntityIdAndAssetEntityType(entityId, entityType);
   }
 
   @Override
