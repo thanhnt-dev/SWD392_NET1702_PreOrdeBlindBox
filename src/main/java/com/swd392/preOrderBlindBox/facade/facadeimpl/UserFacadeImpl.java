@@ -18,6 +18,7 @@ import com.swd392.preOrderBlindBox.service.service.JwtTokenService;
 import com.swd392.preOrderBlindBox.service.service.MailQueueProducer;
 import com.swd392.preOrderBlindBox.service.service.UserService;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
@@ -95,14 +96,20 @@ public class UserFacadeImpl implements UserFacade {
 
   @Override
   public BaseResponse<PaginationResponse<List<UserInfoResponse>>> getUserByFilter(
-      UserCriteria criteria) {
-    var users = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    boolean isAdmin = users.getRoleName().equals(Role.ADMIN);
+          UserCriteria criteria) {
+    Optional<User> currentUserOpt = userService.getCurrentUser();
+    boolean isAdmin = false;
+
+    if (currentUserOpt.isPresent()) {
+      User currentUser = currentUserOpt.get();
+      isAdmin = currentUser.getRoleName().equals(Role.ADMIN);
+    }
+
     var result = userService.findByFilter(criteria, isAdmin);
     List<UserInfoResponse> responses =
-        result.getContent().stream().map(this::buildUserInfoResponse).toList();
+            result.getContent().stream().map(this::buildUserInfoResponse).toList();
     return BaseResponse.build(
-        PaginationResponse.build(responses, result, criteria.getCurrentPage()), true);
+            PaginationResponse.build(responses, result, criteria.getCurrentPage()), true);
   }
 
   @Override
@@ -157,6 +164,9 @@ public class UserFacadeImpl implements UserFacade {
         .email(user.getEmail())
         .phone(user.getPhone())
         .name(user.getName())
+        .createdAt(user.getCreatedAt())
+        .updatedAt(user.getUpdatedAt())
+        .isActive(user.isActive())
         .build();
   }
 
