@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -138,6 +135,47 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
             }
             return preorder.getRemainingAmount();
         }
+    }
+
+    @Override
+    public BaseResponse<String> reprocessPayment(Long preorderId, TransactionType transactionType) {
+        Preorder preorder = preorderService.getPreorderById(preorderId)
+                .orElseThrow(() -> new IllegalArgumentException("Preorder not found"));
+
+        if (preorder.getPreorderStatus() != PreorderStatus.PENDING && preorder.getPreorderStatus() != PreorderStatus.DEPOSIT_PAID) {
+            throw new IllegalStateException("Only preorders with failed payments can be reprocessed");
+        }
+
+        // Find the latest transaction
+        Optional<Transaction> latestTransaction = transactionService.getTransactionsOfPreorder(preorderId)
+                .stream()
+                .max(Comparator.comparing(BaseEntity::getCreatedAt));
+
+        // Only allow reprocessing if latest transaction has FAILED status (not PENDING or SUCCESS)
+        if (latestTransaction.isEmpty() || latestTransaction.get().getTransactionStatus() != TransactionStatus.FAILED) {
+            throw new IllegalStateException("No failed transaction found or transaction is still processing");
+        }
+
+        boolean isDeposit = preorder.getPreorderStatus() == PreorderStatus.PENDING;
+        BigDecimal amount = determinePaymentAmount(isDeposit, preorder);
+
+        // Create new transaction
+        Transaction transaction = transactionService.createTransaction(
+                preorder.getId(),
+                transactionType,
+                amount,
+                isDeposit
+        );
+
+        String paymentUrl = String.format(
+                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d",
+                amount.multiply(BigDecimal.valueOf(100)).longValue(),
+                preorder.getId(),
+                preorder.getUser().getEmail(),
+                transaction.getId()
+        );
+
+        return BaseResponse.build(paymentUrl, true);
     }
 
 

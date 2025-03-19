@@ -15,5 +15,8 @@ public class UserInfoResponse {
   private String email;
   private String phone;
   private String name;
+  private boolean isActive;
+  private Long createdAt;
+  private Long updatedAt;
   private Role role;
 }

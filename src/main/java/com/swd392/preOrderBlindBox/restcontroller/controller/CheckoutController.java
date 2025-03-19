@@ -54,6 +54,33 @@ public class CheckoutController {
         return checkoutFacade.initiateDepositPayment(preorderRequest, TransactionType.VNPAY);
     }
 
+    @PostMapping("/retry/{preorderId}")
+    @PreAuthorize("hasRole('USER')")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(
+            summary = "Retry a failed checkout transaction",
+            tags = {"Checkout APIs"})
+    @ApiResponses(
+            value = {
+                    @ApiResponse(responseCode = "200", description = "Checkout reprocessing initiated"),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Unauthorized access to preorder",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Preorder not found",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error",
+                            content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+            })
+    public BaseResponse<String> reprocessCheckout(@PathVariable @NotNull Long preorderId) {
+        return checkoutFacade.reprocessPayment(preorderId, TransactionType.VNPAY);
+    }
+
     @PostMapping("/remaining-amount/{preorderId}")
     @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "Bearer Authentication")

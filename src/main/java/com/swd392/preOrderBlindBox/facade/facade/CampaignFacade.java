@@ -2,13 +2,17 @@ package com.swd392.preOrderBlindBox.facade.facade;
 
 import com.swd392.preOrderBlindBox.restcontroller.request.PreorderCampaignRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
-import com.swd392.preOrderBlindBox.restcontroller.response.CampaignTierResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderCampaignDetailsManagementResponse;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderCampaignManagementResponse;
+
 import java.util.List;
 
 public interface CampaignFacade {
-  BaseResponse<List<CampaignTierResponse>> getAllCampaignTiers(Long campaignId);
+  BaseResponse<PreorderCampaignDetailsManagementResponse> getCampaignDetails(Long id);
 
-  BaseResponse<CampaignTierResponse> getCampaignTierWithDetailsById(Long id);
+  BaseResponse<List<PreorderCampaignManagementResponse>> getAllCampaignsOfSeries(Long seriesId);
 
-  BaseResponse<Void> createCampaignTier(PreorderCampaignRequest request);
+  BaseResponse<PreorderCampaignDetailsManagementResponse> createCampaign(PreorderCampaignRequest request);
+
+  BaseResponse<Void> endCampaign(Long campaignId);
 }

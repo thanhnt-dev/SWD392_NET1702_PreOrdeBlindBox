@@ -9,12 +9,12 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class PreorderCampaignResponse {
+public class PreorderCampaignManagementResponse {
   Long id;
-  BlindboxSeriesResponse series;
   CampaignType campaignType;
   LocalDateTime startCampaignTime;
   LocalDateTime endCampaignTime;
   boolean isActive;
   int totalDiscountedUnits;
+  int currentUnitsCount;
 }

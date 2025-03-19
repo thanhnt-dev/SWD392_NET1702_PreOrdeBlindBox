@@ -2,19 +2,36 @@ package com.swd392.preOrderBlindBox.service.serviceimpl;
 
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
+import com.swd392.preOrderBlindBox.entity.BlindboxSeries;
 import com.swd392.preOrderBlindBox.entity.BlindboxSeriesItem;
 import com.swd392.preOrderBlindBox.repository.repository.BlindboxSeriesItemRepository;
+import com.swd392.preOrderBlindBox.restcontroller.request.BlindboxSeriesItemsCreateRequest;
 import com.swd392.preOrderBlindBox.service.service.BlindboxSeriesItemService;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class BlindboxSeriesItemServiceImpl implements BlindboxSeriesItemService {
   private final BlindboxSeriesItemRepository blindboxSeriesItemRepository;
+  private final ModelMapper mapper;
+
+  @Override
+  public List<BlindboxSeriesItem> createItemsForSeries(List<BlindboxSeriesItemsCreateRequest> itemRequests, BlindboxSeries series) {
+    return itemRequests.stream()
+            .map(request -> {
+              BlindboxSeriesItem item = mapper.map(request, BlindboxSeriesItem.class);
+              item.setBlindboxSeries(series);
+              return createItem(item);
+            })
+            .collect(Collectors.toList());
+  }
 
   @Override
   public List<BlindboxSeriesItem> getItemsByBlindboxSeriesId(Long blindboxSeriesId) {

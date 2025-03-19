@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PreorderItemRepository extends JpaRepository<PreorderItem, Long> {
   List<PreorderItem> findByPreorderId(Long preorderId);
+
+  List<PreorderItem> findByBlindboxSeriesId(Long blindboxSeriesId);
 }

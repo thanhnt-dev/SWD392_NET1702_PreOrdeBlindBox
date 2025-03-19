@@ -18,10 +18,10 @@ public class BlindboxPackage extends BaseEntity implements Serializable {
   @JoinColumn(name = "series_id")
   private BlindboxSeries series;
 
-  @Column(name = "total_units", nullable = false)
+  @Column(name = "total_units")
   private Integer totalUnits;
 
-  @Column(name = "current_sold_units", nullable = false)
+  @Column(name = "current_sold_units")
   private Integer currentSoldUnits;
 
   @Enumerated(EnumType.STRING)

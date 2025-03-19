@@ -51,7 +51,7 @@ public class UserController {
     return this.userFacade.setUserAsStaff(id);
   }
 
-  @GetMapping
+  @PostMapping
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("isAuthenticated()")
   @SecurityRequirement(name = "Bearer Authentication")
