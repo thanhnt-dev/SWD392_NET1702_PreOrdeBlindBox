@@ -19,5 +19,5 @@ public class BlindboxSeriesManagementDetailsResponse {
   private List<BlindboxAssetResponse> assets;
   private List<BlindboxPackageResponse> packages;
   private List<BlindboxSeriesItemResponse> items;
-  private List<PreorderCampaignResponse> campaigns;
+  private List<PreorderCampaignManagementResponse> campaigns;
 }

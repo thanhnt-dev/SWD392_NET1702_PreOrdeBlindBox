@@ -172,11 +172,11 @@ public class BlindboxFacadeImpl implements BlindboxFacade {
 
   @Override
   public BaseResponse<BlindboxSeriesManagementDetailsResponse> addBlindboxPackagesToSeries(Long seriesId, int count) {
-    return null;
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Override
   public BaseResponse<BlindboxSeriesManagementDetailsResponse> addBlindboxesToSeries(Long seriesId, int count) {
-    return null;
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 }

@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.service.serviceimpl;
 
+import com.swd392.preOrderBlindBox.common.enums.CampaignType;
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.enums.TierStatus;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -108,6 +110,48 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
     updateTierProgress(activeTier, tiers, campaignId, unitsCount, remainingUnits);
   }
 
+  @Override
+  public int getTotalDiscountedUnitsOfCampaign(Long campaignId) {
+    return campaignTierRepository.findByCampaignId(campaignId).stream()
+            .mapToInt(CampaignTier::getThresholdQuantity)
+            .sum();
+  }
+
+  @Override
+  public int getCurrentUnitsCountOfCampaign(Long campaignId) {
+    return campaignTierRepository.findByCampaignId(campaignId).stream()
+            .mapToInt(CampaignTier::getCurrentCount)
+            .sum();
+  }
+
+  @Override
+  public void validateCampaignTiers(PreorderCampaign campaign) {
+    List<CampaignTier> tiers = campaign.getCampaignTiers();
+    if (tiers == null || tiers.isEmpty()) {
+      throw new IllegalArgumentException("Campaign must have at least one tier.");
+    }
+
+    List<CampaignTier> sortedTiers = tiers.stream()
+            .sorted(Comparator.comparingInt(CampaignTier::getTierOrder))
+            .collect(Collectors.toList());
+
+    CampaignType type = campaign.getCampaignType();
+    for (int i = 1; i < sortedTiers.size(); i++) {
+      CampaignTier current = sortedTiers.get(i);
+      CampaignTier previous = sortedTiers.get(i - 1);
+      if (type == CampaignType.MILESTONE) {
+        if (current.getDiscountPercent() >= previous.getDiscountPercent()) {
+          throw new IllegalArgumentException("Milestone tiers must have decreasing discounts.");
+        }
+      } else if (type == CampaignType.GROUP) {
+        if (current.getDiscountPercent() <= previous.getDiscountPercent()) {
+          throw new IllegalArgumentException("Group tiers must have increasing discounts.");
+        }
+      }
+    }
+  }
+
+
   private List<CampaignTier> fetchCampaignTiers(Long campaignId) {
     return campaignTierRepository.findByCampaignId(campaignId);
   }
@@ -160,7 +204,9 @@ public class PreorderCampaignServiceImpl implements PreorderCampaignService {
             .findFirst();
   }
 
-  private void endCampaign(Long campaignId) {
+  @Override
+  @Transactional
+  public void endCampaign(Long campaignId) {
     PreorderCampaign campaign = preorderCampaignRepository.findById(campaignId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
     campaign.setActive(false);

@@ -16,8 +16,6 @@ public class CampaignTierRequest {
   @Size(max = 50, message = "Alias không được quá 50 ký tự")
   private String alias;
 
-  private int currentCount;
-
   private int thresholdQuantity;
 
   @Min(value = 1, message = "Tier order phải >= 1")
@@ -26,7 +24,4 @@ public class CampaignTierRequest {
   @Min(value = 0, message = "Discount percent phải >= 0")
   @Max(value = 100, message = "Discount percent không được quá 100")
   private int discountPercent;
-
-  @NotNull(message = "Tier status không được để trống")
-  private TierStatus tierStatus;
 }

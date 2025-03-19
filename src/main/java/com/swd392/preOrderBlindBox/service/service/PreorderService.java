@@ -2,6 +2,7 @@ package com.swd392.preOrderBlindBox.service.service;
 
 import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
 import com.swd392.preOrderBlindBox.entity.Preorder;
+import com.swd392.preOrderBlindBox.entity.PreorderItem;
 import com.swd392.preOrderBlindBox.restcontroller.response.PreorderDetailsResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PreordersHistoryResponse;
 
@@ -29,4 +30,14 @@ public interface PreorderService {
     List<PreordersHistoryResponse> getPreordersOfUser();
 
     PreorderDetailsResponse getPreorderDetails(Long preorderId);
+
+    List<PreorderItem> getPreorderItemsAssociatedWithBlindboxSeries(Long seriesId);
+
+    void updatePreorderItem(PreorderItem preorderItem);
+
+    void updatePreorderPrice(Long preorderId);
+
+    void updatePreorderTotalAmount(Long preorderId);
+
+    void updatePreorderEstimatedTotalAmount(Long preorderId);
 }

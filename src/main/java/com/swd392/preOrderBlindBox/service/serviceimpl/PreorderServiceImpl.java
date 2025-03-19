@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -214,6 +215,65 @@ public class PreorderServiceImpl implements PreorderService {
         response.setCreatedAt(Util.convertTimestampToLocalDateTime(preorder.getCreatedAt()));
 
         return response;
+    }
+
+    @Override
+    public List<PreorderItem> getPreorderItemsAssociatedWithBlindboxSeries(Long seriesId) {
+        return preorderItemRepository.findByBlindboxSeriesId(seriesId);
+    }
+
+    @Override
+    public void updatePreorderItem(PreorderItem preorderItem) {
+        preorderItemRepository.save(preorderItem);
+    }
+
+    @Override
+    public void updatePreorderPrice(Long preorderId) {
+        Preorder preorder = preorderRepository.findById(preorderId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+        boolean isAllLocked = preorder.getPreorderItems().stream()
+                .allMatch(item -> item.getLockedPrice() != null);
+
+        updatePreorderEstimatedTotalAmount(preorderId);
+        if (isAllLocked) {
+            updatePreorderTotalAmount(preorderId);
+        }
+
+        preorderRepository.save(preorder);
+    }
+
+    @Override
+    public void updatePreorderTotalAmount(Long preorderId) {
+        Preorder preorder = preorderRepository.findById(preorderId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+        for (PreorderItem item : preorder.getPreorderItems()) {
+            if (item.getLockedPrice() == null) {
+                throw new IllegalStateException("Cannot update total amount for preorder with item's locked price not set");
+            }
+        }
+
+        BigDecimal totalAmount = preorder.getPreorderItems().stream()
+                .map(PreorderItem::getLockedPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        preorder.setTotalAmount(totalAmount);
+        preorder.setRemainingAmount(Util.normalizePrice(totalAmount.subtract(preorder.getDepositAmount())));
+        preorderRepository.save(preorder);
+    }
+
+    @Override
+    public void updatePreorderEstimatedTotalAmount(Long preorderId) {
+        Preorder preorder = preorderRepository.findById(preorderId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+        BigDecimal estimatedTotalAmount = preorder.getPreorderItems().stream()
+                .map(PreorderItem::getOriginalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        preorder.setEstimatedTotalAmount(estimatedTotalAmount);
+        preorderRepository.save(preorder);
     }
 
     private List<PaymentSummaryResponse> buildPaymentSummaries(Preorder preorder) {

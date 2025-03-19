@@ -26,4 +26,12 @@ public interface PreorderCampaignService {
   int getDiscountOfActiveTierOfOnGoingCampaign(Long campaignId);
 
   void incrementUnitsCount(Long campaignId, int unitsCount);
+
+  int getTotalDiscountedUnitsOfCampaign(Long campaignId);
+
+  int getCurrentUnitsCountOfCampaign(Long campaignId);
+
+  void validateCampaignTiers(PreorderCampaign preorderCampaign);
+
+  void endCampaign(Long campaignId);
 }
