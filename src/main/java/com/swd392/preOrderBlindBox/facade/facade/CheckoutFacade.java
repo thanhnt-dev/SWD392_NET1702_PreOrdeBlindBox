@@ -20,4 +20,6 @@ public interface CheckoutFacade {
 
     BaseResponse<PaymentResponse> createVnPayPaymentRequest(HttpServletRequest request);
 
+    BaseResponse<String> reprocessPayment(Long preorderId, TransactionType transactionType);
+
 }

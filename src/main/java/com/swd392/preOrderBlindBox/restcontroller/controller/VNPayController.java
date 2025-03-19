@@ -84,7 +84,7 @@ public class VNPayController {
     }
 
     private String handlePaymentCallback(Long preorderId, Long transactionId, String status, String transactionCode, String bankCode) {
-        String redirectUrl = frontendBaseUrl + "/preorder/" + preorderId;
+        String redirectUrl = frontendBaseUrl + "/preorder/" + "/preorders";
         boolean isSuccess = status.equals("00");
 
         return redirectUrl + checkoutFacade.finalizePayment(transactionId, transactionCode, preorderId, isSuccess);
