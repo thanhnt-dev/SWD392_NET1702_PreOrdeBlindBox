@@ -16,18 +16,20 @@ public class PaymentServiceImpl implements PaymentService {
   private final VNPayConfig vnPayConfig;
 
   public BaseResponse<PaymentResponse> createVnPayPayment(HttpServletRequest request) {
-    long amount = Integer.parseInt(request.getParameter("amount")) * 100L;
+//    long amount = Integer.parseInt(request.getParameter("amount")) * 100L;
+    long amount = (long) Integer.parseInt(request.getParameter("amount"));
     String bankCode = request.getParameter("bankCode");
     String preorderId = request.getParameter("preorderId");
     String username = request.getParameter("username");
     String transactionId = request.getParameter("transactionId");
+    String platform = request.getParameter("platform");
     Map<String, String> vnpParamsMap;
 
     if (transactionId != null) {
       int id = Integer.parseInt(transactionId);
-      vnpParamsMap = vnPayConfig.getVNPayConfig(preorderId, username, id);
+      vnpParamsMap = vnPayConfig.getVNPayConfig(preorderId, username, id, platform);
     } else {
-      vnpParamsMap = vnPayConfig.getVNPayConfig(preorderId, username, 0);
+      vnpParamsMap = vnPayConfig.getVNPayConfig(preorderId, username, 0, platform);
     }
     vnpParamsMap.put("vnp_Amount", String.valueOf(amount));
     if (bankCode != null && !bankCode.isEmpty()) {

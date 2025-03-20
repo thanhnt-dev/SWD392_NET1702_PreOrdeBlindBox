@@ -2,6 +2,7 @@ package com.swd392.preOrderBlindBox.restcontroller.controller;
 
 import com.swd392.preOrderBlindBox.common.enums.TransactionType;
 import com.swd392.preOrderBlindBox.facade.facade.CheckoutFacade;
+import com.swd392.preOrderBlindBox.restcontroller.request.PaymentProcessRequest;
 import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
@@ -50,7 +51,7 @@ public class CheckoutController {
         return checkoutFacade.initiateDepositPayment(preorderRequest, TransactionType.VNPAY);
     }
 
-    @PostMapping("/retry/{preorderId}")
+    @PostMapping("/retry")
     @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @ResponseStatus(HttpStatus.OK)
@@ -73,11 +74,11 @@ public class CheckoutController {
                             description = "Internal server error",
                             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
             })
-    public BaseResponse<String> reprocessCheckout(@PathVariable @NotNull Long preorderId) {
-        return checkoutFacade.reprocessPayment(preorderId, TransactionType.VNPAY);
+    public BaseResponse<String> reprocessCheckout(@Valid @RequestBody PaymentProcessRequest request) {
+        return checkoutFacade.reprocessPayment(request.getPreorderId(), TransactionType.VNPAY, request.getPlatform());
     }
 
-    @PostMapping("/remaining-amount/{preorderId}")
+    @PostMapping("/remaining-amount")
     @PreAuthorize("hasRole('USER')")
     @SecurityRequirement(name = "Bearer Authentication")
     @ResponseStatus(HttpStatus.OK)
@@ -96,8 +97,8 @@ public class CheckoutController {
                             description = "Internal server error",
                             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
             })
-    public BaseResponse<String> processRemainingAmountCheckout(@PathVariable @NotNull Long preorderId) {
-        return checkoutFacade.initiateRemainingAmountPayment(preorderId, TransactionType.VNPAY);
+    public BaseResponse<String> processRemainingAmountCheckout(@Valid @RequestBody PaymentProcessRequest request) {
+        return checkoutFacade.initiateRemainingAmountPayment(request.getPreorderId(), TransactionType.VNPAY, request.getPlatform());
     }
 
     @GetMapping

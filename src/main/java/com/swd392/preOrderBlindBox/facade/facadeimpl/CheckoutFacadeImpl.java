@@ -1,9 +1,6 @@
 package com.swd392.preOrderBlindBox.facade.facadeimpl;
 
-import com.swd392.preOrderBlindBox.common.enums.CampaignType;
-import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
-import com.swd392.preOrderBlindBox.common.enums.TransactionStatus;
-import com.swd392.preOrderBlindBox.common.enums.TransactionType;
+import com.swd392.preOrderBlindBox.common.enums.*;
 import com.swd392.preOrderBlindBox.common.util.Util;
 import com.swd392.preOrderBlindBox.entity.*;
 import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
@@ -86,19 +83,22 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
                 true
         );
 
+        Platform platform = preorderRequest.getPlatform() != null ? preorderRequest.getPlatform() : Platform.WEB;
+
         String paymentUrl = String.format(
-                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d",
+                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d&platform=%s",
                 amount.multiply(BigDecimal.valueOf(100)).longValue(),
                 savedPreorder.getId(),
                 savedPreorder.getUser().getEmail(),
-                transaction.getId()
+                transaction.getId(),
+                platform.name()
         );
         return BaseResponse.build(paymentUrl, true);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public BaseResponse<String> initiateRemainingAmountPayment(Long preorderId, TransactionType transactionType) {
+    public BaseResponse<String> initiateRemainingAmountPayment(Long preorderId, TransactionType transactionType, Platform platform) {
         Preorder preorder = preorderService.getPreorderById(preorderId)
                 .orElseThrow(() -> new IllegalArgumentException("Preorder not found"));
 
@@ -111,11 +111,12 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
         );
 
         String paymentUrl = String.format(
-                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d",
+                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d&platform=%s",
                 amount.multiply(BigDecimal.valueOf(100)).longValue(),
                 preorder.getId(),
                 preorder.getUser().getEmail(),
-                transaction.getId()
+                transaction.getId(),
+                platform.name()
         );
         return BaseResponse.build(paymentUrl, true);
     }
@@ -138,7 +139,7 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
     }
 
     @Override
-    public BaseResponse<String> reprocessPayment(Long preorderId, TransactionType transactionType) {
+    public BaseResponse<String> reprocessPayment(Long preorderId, TransactionType transactionType, Platform platform) {
         Preorder preorder = preorderService.getPreorderById(preorderId)
                 .orElseThrow(() -> new IllegalArgumentException("Preorder not found"));
 
@@ -168,11 +169,12 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
         );
 
         String paymentUrl = String.format(
-                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d",
+                "/api/v1/payment/vn-pay?amount=%d&preorderId=%d&username=%s&transactionId=%d&platform=%s",
                 amount.multiply(BigDecimal.valueOf(100)).longValue(),
                 preorder.getId(),
                 preorder.getUser().getEmail(),
-                transaction.getId()
+                transaction.getId(),
+                platform.name()
         );
 
         return BaseResponse.build(paymentUrl, true);
@@ -211,6 +213,11 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
     public BaseResponse<PaymentResponse> createVnPayPaymentRequest(HttpServletRequest request) {
         String preorderIdStr = request.getParameter("preorderId");
         String transactionIdStr = request.getParameter("transactionId");
+        Platform platform = (Platform) request.getAttribute("platform");
+
+        if (platform == null) {
+            platform = Platform.WEB;
+        }
 
         if (preorderIdStr == null || transactionIdStr == null) {
             throw new IllegalArgumentException("Missing required parameters");

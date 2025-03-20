@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.restcontroller.request;
 
+import com.swd392.preOrderBlindBox.common.enums.Platform;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,4 +23,7 @@ public class PreorderRequest {
   @NotBlank(message = "Address cannot be blank")
   @Schema(description = "userAddress", example = "34 Hàng Đào, Hoàn Kiếm, Hà Nội")
   String userAddress;
+
+  @Schema(description = "Platform (WEB or MOBILE)", example = "WEB")
+  Platform platform;
 }

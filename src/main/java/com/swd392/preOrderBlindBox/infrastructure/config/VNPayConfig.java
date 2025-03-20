@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.infrastructure.config;
 
+import com.swd392.preOrderBlindBox.common.enums.Platform;
 import com.swd392.preOrderBlindBox.common.util.VNPayUtil;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -33,7 +34,7 @@ public class VNPayConfig {
   private String orderType;
 
   public Map<String, String> getVNPayConfig(
-      String preorderId, String username, Integer transactionId) {
+      String preorderId, String username, Integer transactionId, String platform) {
     Map<String, String> vnpParamsMap = new HashMap<>();
     vnpParamsMap.put("vnp_Version", this.vnpVersion);
     vnpParamsMap.put("vnp_Command", this.vnpCommand);
@@ -51,7 +52,9 @@ public class VNPayConfig {
             + "&username="
             + username
             + "&transactionId="
-            + transactionId);
+            + transactionId
+            + "&platform="
+            + platform);
 
     TimeZone timeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
     Calendar calendar = Calendar.getInstance(timeZone);

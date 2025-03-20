@@ -1,5 +1,6 @@
 package com.swd392.preOrderBlindBox.restcontroller.controller;
 
+import com.swd392.preOrderBlindBox.common.enums.Platform;
 import com.swd392.preOrderBlindBox.facade.facade.CheckoutFacade;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
@@ -28,6 +29,9 @@ public class VNPayController {
 
     @Value("${frontend.base-url}")
     private String frontendBaseUrl;
+
+    @Value("${mobile.base-url}")
+    private String mobileBaseUrl;
 
     @GetMapping("/vn-pay")
     @ResponseStatus(HttpStatus.OK)
@@ -65,24 +69,53 @@ public class VNPayController {
                             description = "Internal server error",
                             content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
             })
-    public void payCallbackHandler(
+    public String payCallbackHandler(
             HttpServletRequest request,
-            HttpServletResponse response,
-            @RequestParam("username") String username,
-            @RequestParam("preorderId") Long preorderId,
-            @RequestParam("transactionId") Long transactionId
+            HttpServletResponse response
     ) throws IOException {
-        String bankCode = request.getParameter("vnp_BankCode");
-        String status = request.getParameter("vnp_ResponseCode");
-        String transactionCode = request.getParameter("vnp_TransactionNo");
-        String redirectUrl = handlePaymentCallback(preorderId, transactionId, status, transactionCode, bankCode);
-        response.sendRedirect(redirectUrl);
+        try {
+            // Extract parameters manually from request to avoid Spring's binding mechanisms
+            String username = request.getParameter("username");
+            Long preorderId = Long.valueOf(request.getParameter("preorderId"));
+            Long transactionId = Long.valueOf(request.getParameter("transactionId"));
+            String platformStr = request.getParameter("platform");
+
+            // Safely convert platform string to enum
+            Platform platform = Platform.WEB; // Default value
+            if (platformStr != null && !platformStr.isEmpty()) {
+                try {
+                    platform = Platform.valueOf(platformStr);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Invalid platform value: " + platformStr + ". Using WEB as default.");
+                }
+            }
+
+            String bankCode = request.getParameter("vnp_BankCode");
+            String status = request.getParameter("vnp_ResponseCode");
+            String transactionCode = request.getParameter("vnp_TransactionNo");
+
+            String redirectUrl = handlePaymentCallback(preorderId, transactionId, status, transactionCode, bankCode, platform);
+            response.sendRedirect(redirectUrl);
+            return "Redirecting to: " + redirectUrl;
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errorRedirect = frontendBaseUrl + "/payment-error?message=" + e.getMessage();
+            response.sendRedirect(errorRedirect);
+            return "Error occurred: " + e.getMessage();
+        }
     }
 
-    private String handlePaymentCallback(Long preorderId, Long transactionId, String status, String transactionCode, String bankCode) {
-        String redirectUrl = frontendBaseUrl + "/preorder/" + "/preorders";
-        boolean isSuccess = status.equals("00");
+    private String handlePaymentCallback(Long preorderId, Long transactionId, String status,
+                                         String transactionCode, String bankCode, Platform platform) {
+        String redirectUrl;
 
+        if (platform == Platform.MOBILE) {
+            redirectUrl = mobileBaseUrl + "/preorder/" + "/preorders";
+        } else {
+            redirectUrl = frontendBaseUrl + "/preorder/" + "/preorders";
+        }
+
+        boolean isSuccess = status.equals("00");
         return redirectUrl + checkoutFacade.finalizePayment(transactionId, transactionCode, preorderId, isSuccess);
     }
 

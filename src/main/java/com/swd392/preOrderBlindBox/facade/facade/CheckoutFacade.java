@@ -1,6 +1,7 @@
 package com.swd392.preOrderBlindBox.facade.facade;
 
 
+import com.swd392.preOrderBlindBox.common.enums.Platform;
 import com.swd392.preOrderBlindBox.common.enums.TransactionType;
 import com.swd392.preOrderBlindBox.entity.Preorder;
 import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
@@ -12,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public interface CheckoutFacade {
     BaseResponse<String> initiateDepositPayment(PreorderRequest preorderRequest, TransactionType transactionType);
 
-    BaseResponse<String> initiateRemainingAmountPayment(Long preorderId, TransactionType transactionType);
+    BaseResponse<String> initiateRemainingAmountPayment(Long preorderId, TransactionType transactionType, Platform platform);
 
     BaseResponse<PreorderEstimateResponse> getPreorderEstimate();
 
@@ -20,6 +21,6 @@ public interface CheckoutFacade {
 
     BaseResponse<PaymentResponse> createVnPayPaymentRequest(HttpServletRequest request);
 
-    BaseResponse<String> reprocessPayment(Long preorderId, TransactionType transactionType);
+    BaseResponse<String> reprocessPayment(Long preorderId, TransactionType transactionType, Platform platform);
 
 }

@@ -357,9 +357,9 @@ public class PreorderServiceImpl implements PreorderService {
 
     private TransactionResponse toTransactionResponse(Transaction transaction) {
         TransactionResponse response = modelMapper.map(transaction, TransactionResponse.class);
-        TransactionResponse relatedTransactionResponse = modelMapper.map(transaction.getRelatedTransaction(), TransactionResponse.class);
 
-        if (relatedTransactionResponse != null) {
+        if (transaction.getRelatedTransaction() != null) {
+            TransactionResponse relatedTransactionResponse = modelMapper.map(transaction.getRelatedTransaction(), TransactionResponse.class);
             relatedTransactionResponse.setCreatedAt(Util.convertTimestampToLocalDateTime(transaction.getRelatedTransaction().getCreatedAt()));
             response.setRelatedTransaction(relatedTransactionResponse);
         }
