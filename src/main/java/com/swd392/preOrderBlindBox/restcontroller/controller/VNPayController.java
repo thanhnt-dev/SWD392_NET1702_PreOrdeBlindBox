@@ -1,12 +1,9 @@
 package com.swd392.preOrderBlindBox.restcontroller.controller;
 
-import com.swd392.preOrderBlindBox.common.enums.TransactionStatus;
 import com.swd392.preOrderBlindBox.facade.facade.CheckoutFacade;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PaymentResponse;
-import com.swd392.preOrderBlindBox.service.service.PaymentService;
-import com.swd392.preOrderBlindBox.service.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/payment")

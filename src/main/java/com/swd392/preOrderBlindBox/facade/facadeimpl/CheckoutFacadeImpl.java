@@ -10,6 +10,7 @@ import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.*;
 import com.swd392.preOrderBlindBox.facade.facade.CheckoutFacade;
 import com.swd392.preOrderBlindBox.service.service.*;
+import com.swd392.preOrderBlindBox.service.serviceimpl.PaymentServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -19,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +29,7 @@ public class CheckoutFacadeImpl implements CheckoutFacade {
     private final TransactionService transactionService;
     private final PreorderCampaignService preorderCampaignService;
     private final ModelMapper modelMapper;
-    private final PaymentService paymentService;
+    private final PaymentServiceImpl paymentService;
     private final CartService cartService;
     @Value("${deposit.rate:0.5}")
     private BigDecimal depositRate;

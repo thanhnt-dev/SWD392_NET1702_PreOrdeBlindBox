@@ -1,14 +1,11 @@
 package com.swd392.preOrderBlindBox.restcontroller.controller;
 
 import com.swd392.preOrderBlindBox.common.enums.TransactionType;
-import com.swd392.preOrderBlindBox.entity.Preorder;
 import com.swd392.preOrderBlindBox.facade.facade.CheckoutFacade;
 import com.swd392.preOrderBlindBox.restcontroller.request.PreorderRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.BaseResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.ExceptionResponse;
-import com.swd392.preOrderBlindBox.restcontroller.response.PaymentResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PreorderEstimateResponse;
-import com.swd392.preOrderBlindBox.service.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
