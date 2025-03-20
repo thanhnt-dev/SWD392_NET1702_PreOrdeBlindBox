@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TransactionService {
-  Transaction createTransaction(
-      Long preorderId, TransactionType transactionType, BigDecimal amount, boolean isDeposit);
+  Transaction createTransaction(Long preorderId, TransactionType transactionType, BigDecimal amount, boolean isDeposit);
 
   void updateTransactionStatus(Long id, TransactionStatus status);
 

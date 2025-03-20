@@ -121,12 +121,63 @@ public class PreorderServiceImpl implements PreorderService {
     }
 
     @Override
-    public Preorder updatePreorderStatus(Long id, PreorderStatus status) {
+    @Transactional
+    public PreorderDetailsManagementResponse updatePreorderStatus(Long id, PreorderStatus status) {
         Preorder preorder = preorderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
 
+        PreorderStatus currentStatus = preorder.getPreorderStatus();
+        if (currentStatus == status) {
+            throw new IllegalStateException("Preorder is already in status: " + status);
+        }
+
+        switch (currentStatus) {
+            case PENDING:
+                if (status != PreorderStatus.DEPOSIT_PAID && status != PreorderStatus.CANCELED) {
+                    throw new IllegalStateException("Cannot transition from PENDING to " + status);
+                }
+                break;
+            case DEPOSIT_PAID:
+                if (status != PreorderStatus.FULLY_PAID && status != PreorderStatus.CANCELED) {
+                    throw new IllegalStateException("Cannot transition from DEPOSIT_PAID to " + status);
+                }
+                break;
+            case FULLY_PAID:
+                if (status != PreorderStatus.PENDING_FOR_DELIVERY && status != PreorderStatus.CANCELED) {
+                    throw new IllegalStateException("Cannot transition from FULLY_PAID to " + status);
+                }
+                break;
+            case PENDING_FOR_DELIVERY:
+                if (status != PreorderStatus.IN_DELIVERY && status != PreorderStatus.CANCELED) {
+                    throw new IllegalStateException("Cannot transition from PENDING_FOR_DELIVERY to " + status);
+                }
+                break;
+            case IN_DELIVERY:
+                if (status != PreorderStatus.DELIVERY_SUCCESS && status != PreorderStatus.DELIVERY_FAILED) {
+                    throw new IllegalStateException("Cannot transition from IN_DELIVERY to " + status);
+                }
+                break;
+            case DELIVERY_SUCCESS:
+                if (status != PreorderStatus.COMPLETED) {
+                    throw new IllegalStateException("Cannot transition from DELIVERY_SUCCESS to " + status);
+                }
+                break;
+            case DELIVERY_FAILED:
+                if (status != PreorderStatus.IN_DELIVERY && status != PreorderStatus.CANCELED) {
+                    throw new IllegalStateException("Cannot transition from DELIVERY_FAILED to " + status);
+                }
+                break;
+            case COMPLETED:
+            case CANCELED:
+                throw new IllegalStateException("Cannot transition from terminal status " + currentStatus + " to " + status);
+            default:
+                throw new IllegalStateException("Unknown current status: " + currentStatus);
+        }
+
         preorder.setPreorderStatus(status);
-        return preorderRepository.save(preorder);
+        preorderRepository.save(preorder);
+
+        return getPreorderDetailsManagement(preorder.getId());
     }
 
     @Override
@@ -196,11 +247,6 @@ public class PreorderServiceImpl implements PreorderService {
         return preorderRepository.findByUserId(user.getId()).stream()
                 .map(this::toPreordersHistoryResponse)
                 .collect(Collectors.toList());
-    }
-
-    private PreordersHistoryResponse toPreordersHistoryResponse(Preorder preorder) {
-        PreordersHistoryResponse response = modelMapper.map(preorder, PreordersHistoryResponse.class);
-        return response;
     }
 
     @Override
@@ -276,10 +322,50 @@ public class PreorderServiceImpl implements PreorderService {
         preorderRepository.save(preorder);
     }
 
+    @Override
+    public List<PreordersHistoryResponse> getAllPreorders() {
+        return preorderRepository.findAll().stream()
+                .map(this::toPreordersHistoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PreorderDetailsManagementResponse getPreorderDetailsManagement(Long preorderId) {
+        Preorder preorder = preorderRepository.findById(preorderId)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESOURCES_NOT_FOUND));
+
+        PreorderDetailsManagementResponse response = modelMapper.map(preorder, PreorderDetailsManagementResponse.class);
+        response.setUsername(preorder.getUser().getEmail());
+        response.setTransactions(buildTransactionResponses(preorder));
+        response.setItems(buildPreorderItems(preorder.getPreorderItems()));
+        response.setCreatedAt(Util.convertTimestampToLocalDateTime(preorder.getCreatedAt()));
+
+        return response;
+    }
+
     private List<PaymentSummaryResponse> buildPaymentSummaries(Preorder preorder) {
         return preorder.getTransactions().stream()
                 .map(this::toPaymentSummaryResponse)
                 .collect(Collectors.toList());
+    }
+
+    private List<TransactionResponse> buildTransactionResponses(Preorder preorder) {
+        return preorder.getTransactions().stream()
+                .map(this::toTransactionResponse)
+                .collect(Collectors.toList());
+    }
+
+    private TransactionResponse toTransactionResponse(Transaction transaction) {
+        TransactionResponse response = modelMapper.map(transaction, TransactionResponse.class);
+        TransactionResponse relatedTransactionResponse = modelMapper.map(transaction.getRelatedTransaction(), TransactionResponse.class);
+
+        if (relatedTransactionResponse != null) {
+            relatedTransactionResponse.setCreatedAt(Util.convertTimestampToLocalDateTime(transaction.getRelatedTransaction().getCreatedAt()));
+            response.setRelatedTransaction(relatedTransactionResponse);
+        }
+
+        response.setCreatedAt(Util.convertTimestampToLocalDateTime(transaction.getCreatedAt()));
+        return response;
     }
 
     private PaymentSummaryResponse toPaymentSummaryResponse(Transaction transaction) {
@@ -316,6 +402,10 @@ public class PreorderServiceImpl implements PreorderService {
         response.setSeriesId(preorderItem.getBlindboxSeries().getId());
         response.setAlias(generateProductAlias(productId, preorderItem));
         return response;
+    }
+
+    private PreordersHistoryResponse toPreordersHistoryResponse(Preorder preorder) {
+        return modelMapper.map(preorder, PreordersHistoryResponse.class);
     }
 
     private List<Long> parseProductIds(String productIds) {

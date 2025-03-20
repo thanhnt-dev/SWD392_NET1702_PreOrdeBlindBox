@@ -3,6 +3,7 @@ package com.swd392.preOrderBlindBox.service.service;
 import com.swd392.preOrderBlindBox.common.enums.PreorderStatus;
 import com.swd392.preOrderBlindBox.entity.Preorder;
 import com.swd392.preOrderBlindBox.entity.PreorderItem;
+import com.swd392.preOrderBlindBox.restcontroller.response.PreorderDetailsManagementResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PreorderDetailsResponse;
 import com.swd392.preOrderBlindBox.restcontroller.response.PreordersHistoryResponse;
 
@@ -17,7 +18,7 @@ public interface PreorderService {
 
     Optional<Preorder> getPreorderByOrderCode(String orderCode);
 
-    Preorder updatePreorderStatus(Long id, PreorderStatus status);
+    PreorderDetailsManagementResponse updatePreorderStatus(Long id, PreorderStatus status);
 
     BigDecimal calculateDepositAmount(BigDecimal price);
 
@@ -40,4 +41,8 @@ public interface PreorderService {
     void updatePreorderTotalAmount(Long preorderId);
 
     void updatePreorderEstimatedTotalAmount(Long preorderId);
+
+    List<PreordersHistoryResponse> getAllPreorders();
+
+    PreorderDetailsManagementResponse getPreorderDetailsManagement(Long preorderId);
 }
