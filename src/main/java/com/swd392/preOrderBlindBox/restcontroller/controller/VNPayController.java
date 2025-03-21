@@ -110,9 +110,9 @@ public class VNPayController {
         String redirectUrl;
 
         if (platform == Platform.MOBILE) {
-            redirectUrl = mobileBaseUrl + "/preorder/" + "/preorders";
+            redirectUrl = mobileBaseUrl + "account/preorders/" + preorderId;
         } else {
-            redirectUrl = frontendBaseUrl + "/preorder/" + "/preorders";
+            redirectUrl = frontendBaseUrl + "account/preorders/" + preorderId;
         }
 
         boolean isSuccess = status.equals("00");
