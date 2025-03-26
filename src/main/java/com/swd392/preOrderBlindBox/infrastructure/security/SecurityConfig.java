@@ -96,6 +96,8 @@ public class SecurityConfig {
     corsConfig.addAllowedOrigin("http://localhost:5173");
     corsConfig.addAllowedOrigin("https://preorder-blindbox.vercel.app");
     corsConfig.addAllowedOrigin("exp://192.168.1.12:8081");
+    corsConfig.addAllowedOrigin("http://10.0.2.2:8080"); // Emulator Android Studio
+    corsConfig.addAllowedOrigin("*"); // Origin for all . Không khuyến nghị trong production
     corsConfig.addAllowedOrigin("http://localhost:8081"); // Thêm origin này
     corsConfig.addAllowedMethod("*");
     corsConfig.addAllowedHeader("*");
