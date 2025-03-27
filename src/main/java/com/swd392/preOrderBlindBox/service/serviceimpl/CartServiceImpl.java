@@ -2,6 +2,7 @@ package com.swd392.preOrderBlindBox.service.serviceimpl;
 
 import com.swd392.preOrderBlindBox.common.enums.ErrorCode;
 import com.swd392.preOrderBlindBox.common.enums.ProductType;
+import com.swd392.preOrderBlindBox.common.enums.TierStatus;
 import com.swd392.preOrderBlindBox.common.exception.ResourceNotFoundException;
 import com.swd392.preOrderBlindBox.common.util.Util;
 import com.swd392.preOrderBlindBox.entity.*;
@@ -9,10 +10,8 @@ import com.swd392.preOrderBlindBox.repository.repository.CartItemRepository;
 import com.swd392.preOrderBlindBox.repository.repository.CartRepository;
 import com.swd392.preOrderBlindBox.restcontroller.request.CartItemRequest;
 import com.swd392.preOrderBlindBox.restcontroller.response.CartItemResponse;
-import com.swd392.preOrderBlindBox.service.service.BlindboxSeriesService;
-import com.swd392.preOrderBlindBox.service.service.CartService;
-import com.swd392.preOrderBlindBox.service.service.PreorderCampaignService;
-import com.swd392.preOrderBlindBox.service.service.UserService;
+import com.swd392.preOrderBlindBox.service.service.*;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -31,6 +30,7 @@ public class CartServiceImpl implements CartService {
   private final UserService userService;
   private final BlindboxSeriesService blindboxSeriesService;
   private final PreorderCampaignService preorderCampaignService;
+  private final CampaignTierService campaignTierService;
   private final ModelMapper modelMapper;
 
   @Override
@@ -279,23 +279,36 @@ public class CartServiceImpl implements CartService {
 
   private void validateDiscountedUnitsAvailability(CartItem cartItem) {
     PreorderCampaign activeCampaign =
-        preorderCampaignService
-            .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
-            .orElseThrow(() -> new IllegalArgumentException("No active campaign found"));
+            preorderCampaignService
+                    .getOngoingCampaignOfBlindboxSeries(cartItem.getSeries().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("No active campaign found"));
 
     switch (cartItem.getItemCampaignType()) {
       case GROUP:
-        case null:
-            break;
+      case null:
+        break;
       case MILESTONE:
-        int availableDiscountedUnits =
-            preorderCampaignService.getCurrentUnitsCountOfActiveTierOfOngoingCampaign(
-                activeCampaign.getId());
-        if (cartItem.getQuantity() > availableDiscountedUnits) {
-          throw new IllegalArgumentException("Not enough discounted units available");
+        // Get the active tier
+        List<CampaignTier> tiers = campaignTierService.getCampaignTiersByCampaignId(activeCampaign.getId());
+        Optional<CampaignTier> activeTierOptional = tiers.stream()
+                .filter(tier -> tier.getTierStatus() == TierStatus.PROCESSING)
+                .findFirst();
+
+        if (activeTierOptional.isEmpty()) {
+          throw new IllegalStateException("No active tier found for milestone campaign");
+        }
+
+        CampaignTier activeTier = activeTierOptional.get();
+        int currentCount = activeTier.getCurrentCount();
+        int thresholdQuantity = activeTier.getThresholdQuantity();
+        int remainingCapacity = thresholdQuantity - currentCount;
+
+        if (cartItem.getQuantity() > remainingCapacity) {
+          throw new IllegalArgumentException("Not enough discounted units available. Only "
+                  + remainingCapacity + " units remaining in the current tier.");
         }
         break;
-        default:
+      default:
         throw new IllegalArgumentException("Invalid item campaign type");
     }
   }
